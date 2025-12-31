@@ -13,6 +13,7 @@ class Population:
         self.matrix = matrix
         self.size = matrix.shape[0]
         self.genome_length = matrix.shape[1]
+        self.last_fitness = np.ones(self.size)
 
     @classmethod
     def create_homogeneous(cls, size: int, genome: Genome, sequence: np.ndarray = None):
@@ -52,6 +53,9 @@ class Population:
 
         # Update the matrix: This is a 'view' or 'fancy indexing' copy
         self.matrix = self.matrix[indices]
+
+        # Update last fitness
+        self.last_fitness = fitness_values[indices]
 
     def get_count(self) -> int:
         return self.size

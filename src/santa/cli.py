@@ -9,7 +9,7 @@ from src.santa.genome.sequence import Genome
 from src.santa.population.container import Population
 from src.santa.evolution.mutator import NucleotideMutator
 from src.santa.evolution.fitness import FitnessRegistry
-from src.santa.io.sampler import StatisticsSampler, FastaSampler, IdentitySampler
+from src.santa.io.sampler import StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler, DiversitySampler
 
 """
 How the components interact:
@@ -21,11 +21,19 @@ How the components interact:
 6. sampler.py: Records the results to results.csv.
 """
 
+SAMPLER_MAP = {
+    'stats': StatisticsSampler,
+    'fasta': FastaSampler,
+    'identity': IdentitySampler,
+    'fitness': FitnessSampler,
+    'diversity': DiversitySampler
+}
+
 def main():
     """
     Run with:
-         <...\EvoSim> $env:PYTHONPATH = "src"
-         <...\EvoSim> py -m santa.cli src/config.yaml
+         <.../EvoSim> $env:PYTHONPATH = "src"
+         <.../EvoSim> py -m santa.cli src/config.yaml
     in the command line (checked working in Windows PowerShell).
     """
     # TODO better name and description
@@ -70,35 +78,50 @@ def main():
     # 3. Setup Epochs
     epochs = []
     for e_conf in conf['epochs']:
-        mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
+        # Initialize Mutator
+        epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
 
-        # Setup Fitness Model - if initial sequence provided, use it as reference
-        #  (used in purifying selection)
-        fitness_params = e_conf['fitness'].get('params', {})
+        # Setup Fitness Model
+        fitness_params = e_conf['fitness'].get('params', {}).copy()  # Use copy to avoid mutation issues
+        # A. Global Reference handling: If initial sequence exists, inject it
         if initial_seq is not None:
             fitness_params['reference_sequence'] = initial_seq
 
+        # B. Model-Specific Pre-processing (Converting lists to NumPy arrays)
+        fit_type = e_conf['fitness']['type'].lower()
+
+        # --- Model-Specific Requirements ---
+        # Exposure Fitness needs a mutator to drift the peak over time
+        if fit_type == "exposure":
+            fitness_params['mutator'] = epoch_mutator
+        # Epistatic Fitness needs a 2D NumPy array for interactions
+        elif fit_type == "epistatic" and "interaction_matrix" in fitness_params:
+            fitness_params['interaction_matrix'] = np.array(fitness_params['interaction_matrix'])
+        # Categorical Fitness needs a 1D NumPy array for site weights
+        elif fit_type == "categorical" and "site_weights" in fitness_params:
+            fitness_params['site_weights'] = np.array(fitness_params['site_weights'])
+
+        # C. Instantiate via Registry
         fitness = FitnessRegistry.get(
-            e_conf['fitness']['type'],
+            fit_type,
             **fitness_params
         )
 
         epochs.append(Epoch(
             name=e_conf['name'],
             generations=e_conf['generations'],
-            mutator=mutator,
+            mutator=epoch_mutator,
             fitness_model=fitness
         ))
 
     # 4. Setup Samplers
     samplers = []
     for s_conf in conf.get('sampling', []):
-        if s_conf['type'] == 'stats':
-            samplers.append(StatisticsSampler(s_conf['interval'], s_conf['file']))
-        elif s_conf['type'] == 'fasta':
-            samplers.append(FastaSampler(s_conf['interval'], s_conf['file']))
-        elif s_conf['type'] == 'identity':
-            samplers.append(IdentitySampler(s_conf['interval'], s_conf['file']))
+        sampler_class = SAMPLER_MAP.get(s_conf['type'])
+        if sampler_class:
+            samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
+        else:
+            print(f"Warning: Unknown sampler type '{s_conf['type']}'")
 
     # 5. Run
     sim = Simulator(population=pop, epochs=epochs, samplers=samplers)

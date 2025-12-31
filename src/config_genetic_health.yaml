@@ -1,0 +1,56 @@
+# 1. Genome: Define the physical sequence properties
+genome:
+  length: 50        # Increased length for better genomic resolution
+
+# 2. Population: Define how many individuals start the simulation
+population:
+  initial_size: 200
+  initial_sequence: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+# 3. Epochs: The Evolutionary Saga
+epochs:
+  - name: "Phase_1_Host_Adaptation"
+    generations: 300
+    mutator:
+      rate: 0.001
+    fitness:
+      type: "purifying"
+      params:
+        intensity: 0.01   # Strong pressure to keep the original "optimized" sequence
+
+  - name: "Phase_2_Vaccine_Escape"
+    generations: 400
+    mutator:
+      rate: 0.002    # Mutation rate increases under environmental stress
+    fitness:
+      type: "exposure"
+      params:
+        intensity: 0.05
+        update_interval: 20  # The "Ideal" sequence moves every 20 generations!
+
+  - name: "Phase_3_Immune_Memory"
+    generations: 300
+    mutator:
+      rate: 0.001
+    fitness:
+      type: "frequency"
+      params:
+        pressure: 0.8  # Common strains are hunted by the immune system (Rare survives)
+
+# 4. Sampling: Monitoring the Outbreak
+sampling:
+  - type: "stats"
+    interval: 10
+    file: "output/viral_stats.csv"
+  - type: "identity"
+    interval: 5
+    file: "output/viral_identity.csv"
+  - type: "fasta"
+    interval: 500
+    file: "output/viral_sequences.fasta"
+  - type: "fitness"
+    interval: 10
+    file: "output/fitness.csv"
+  - type: "diversity"
+    interval: 10
+    file: "output/diversity.csv"

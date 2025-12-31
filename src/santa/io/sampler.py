@@ -98,8 +98,6 @@ class FastaSampler(Sampler):
                 f.write(f">gen_{generation}_ind_{i}\n")
                 f.write(f"{seq_str}\n")
 
-        print(f" Saved {len(matrix)} sequences to FASTA at generation {generation}")
-
 
 
 class IdentitySampler(Sampler):
@@ -146,8 +144,6 @@ class IdentitySampler(Sampler):
         if not self.history:
             return
 
-        print(f"📈 Generating identity plot: {self.output_path.with_suffix('.png')}")
-
         # Load the data we just wrote
         df = pd.read_csv(self.output_path)
 
@@ -156,7 +152,8 @@ class IdentitySampler(Sampler):
 
         plt.title("Sequence Identity to Initial Sequence Over Time")
         plt.xlabel("Generation")
-        plt.ylabel("Avg Identity (Mean)")
+        # TODO we also need to do as the paper calculates identity - between all pairs
+        plt.ylabel("Avg Identity (Mean) to Initial Sequence")
         plt.ylim(0, 1.05)  # Keeps scale consistent
         plt.grid(True, linestyle='--', alpha=0.7)
 
@@ -164,3 +161,62 @@ class IdentitySampler(Sampler):
         plot_path = self.output_path.with_suffix('.png')
         plt.savefig(plot_path)
         plt.close()  # Close to free up memory
+
+
+class FitnessSampler(Sampler):
+    """Tracks Average Fitness (Genetic Health) over time."""
+    def __init__(self, interval: int, output_path: str):
+        super().__init__(interval, output_path)
+        self.history = []
+
+    def sample(self, population, generation: int):
+        # Capturing fitness from the population object
+        fitness_vals = getattr(population, 'last_fitness', np.array([1.0]))
+        avg_fit = fitness_vals.mean()
+
+        self.history.append({"generation": generation, "avg_fitness": avg_fit})
+        pd.DataFrame(self.history).to_csv(self.output_path, index=False)
+
+    def finalize(self):
+        if not self.history: return
+        df = pd.read_csv(self.output_path)
+        plt.figure(figsize=(10, 5))
+        plt.plot(df['generation'], df['avg_fitness'], color='green', linewidth=2)
+        plt.title("Population Genetic Health (Avg Fitness)")
+        plt.xlabel("Generation")
+        plt.ylabel("Fitness Score")
+        plt.grid(True, alpha=0.3)
+        plt.savefig(self.output_path.with_suffix('.png'))
+        plt.close()
+
+
+class DiversitySampler(Sampler):
+    """Tracks Population Diversity (Unique Genotypes) over time."""
+
+    def __init__(self, interval: int, output_path: str):
+        super().__init__(interval, output_path)
+        self.history = []
+
+    def sample(self, population, generation: int):
+        matrix = population.get_matrix()
+        unique_strains = len(np.unique(matrix, axis=0))
+
+        self.history.append({
+            "generation": generation,
+            "unique_strains": unique_strains,
+            "diversity_ratio": unique_strains / population.get_count()
+        })
+        pd.DataFrame(self.history).to_csv(self.output_path, index=False)
+
+    def finalize(self):
+        if not self.history: return
+        df = pd.read_csv(self.output_path)
+        plt.figure(figsize=(10, 5))
+        plt.fill_between(df['generation'], df['unique_strains'], color='purple', alpha=0.3)
+        plt.plot(df['generation'], df['unique_strains'], color='purple', linewidth=2)
+        plt.title("Viral Population Diversity (Unique Strains)")
+        plt.xlabel("Generation")
+        plt.ylabel("Number of Unique Genotypes")
+        plt.grid(True, alpha=0.3)
+        plt.savefig(self.output_path.with_suffix('.png'))
+        plt.close()

@@ -1,13 +1,13 @@
 # 1. Genome: Define the physical sequence properties
 genome:
-  length: 20        # Number of nucleotides, need to match initial_sequence length, if provided
+  length: 5        # Number of nucleotides, need to match initial_sequence length, if provided
 
 # 2. Population: Define how many individuals start the simulation
 population:
   initial_size: 50  # Number of sequences in the first generation
   # OPTIONAL: Provide a starting sequence.
   # If commented out or removed, it will be random.
-  initial_sequence: "AAAAAAAAAAAAAAAAAAAA"
+  initial_sequence: "AAAAA"
 
 # 3. Epochs: Define the evolutionary "stages"
 # You can add multiple epochs to simulate changing environments
@@ -28,6 +28,20 @@ epochs:
       type: "purifying"
       params:
         intensity: 0.1
+  - name: "Interaction_Test"
+    generations: 500
+    mutator:
+      rate: 0.001
+    fitness:
+      type: "epistatic"
+      params:
+        # A 5x5 matrix if your genome length is 5
+        interaction_matrix:
+          - [0.0, 0.1, 0.0, 0.0, 0.0]
+          - [0.1, 0.0, 0.0, 0.0, 0.0]
+          - [0.0, 0.0, 0.0, 0.0, 0.0]
+          - [0.0, 0.0, 0.0, 0.0, 0.0]
+          - [0.0, 0.0, 0.0, 0.0, 0.0]
 
 # 4. Sampling: Define what data to save and how often
 sampling:

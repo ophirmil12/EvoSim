@@ -31,6 +31,9 @@ class Simulator:
             for g in range(epoch.generations):
                 self.current_generation += 1
 
+                # Call the update hook (e.g., for ExposureFitness to move the peak)
+                epoch.fitness_model.update(self.current_generation)
+
                 # 1. Calculate Fitness
                 fitness_values = epoch.fitness_model.evaluate_population(self.population)
 
@@ -45,6 +48,9 @@ class Simulator:
                     if sampler.is_sampling_time(self.current_generation):
                         sampler.sample(self.population, self.current_generation)
 
+            print(f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})")
+
+        print("Finalizing samplers...")
         for sampler in self.samplers:
             if hasattr(sampler, 'finalize'):
                 sampler.finalize()
