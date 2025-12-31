@@ -9,7 +9,10 @@ from src.santa.genome.sequence import Genome
 from src.santa.population.container import Population
 from src.santa.evolution.mutator import NucleotideMutator
 from src.santa.evolution.fitness import FitnessRegistry
-from src.santa.io.sampler import StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler, DiversitySampler
+from src.santa.io.sampler import (StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler,
+                                  DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
+from src.santa.io.trees import TreeRecorder
+
 
 """
 How the components interact:
@@ -26,7 +29,10 @@ SAMPLER_MAP = {
     'fasta': FastaSampler,
     'identity': IdentitySampler,
     'fitness': FitnessSampler,
-    'diversity': DiversitySampler
+    'diversity': DiversitySampler,
+    'tree': TreeRecorder,
+    'pairwise': PairwiseIdentitySampler,
+    'haplotype': HaplotypeFrequencySampler
 }
 
 def main():
@@ -120,7 +126,15 @@ def main():
     for s_conf in conf.get('sampling', []):
         sampler_class = SAMPLER_MAP.get(s_conf['type'])
         if sampler_class:
-            samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
+            # Special handling for tree which needs initial population size
+            if s_conf['type'] == 'tree':
+                samplers.append(sampler_class(
+                    s_conf['interval'],
+                    s_conf['file'],
+                    initial_size=conf['population']['initial_size']
+                ))
+            else:
+                samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
         else:
             print(f"Warning: Unknown sampler type '{s_conf['type']}'")
 

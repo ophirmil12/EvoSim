@@ -56,6 +56,7 @@ class Population:
 
         # Update last fitness
         self.last_fitness = fitness_values[indices]
+        return indices      # Return indices for ancestry tracking
 
     def get_count(self) -> int:
         return self.size

@@ -37,16 +37,19 @@ class Simulator:
                 # 1. Calculate Fitness
                 fitness_values = epoch.fitness_model.evaluate_population(self.population)
 
-                # 2. Select survivors (Wright-Fisher)
-                self.population.select(fitness_values)
+                # 2. Select survivors (Wright-Fisher) + Record Ancestry
+                parent_indices = self.population.select(fitness_values)
 
-                # 3. Mutate (Variation)
-                epoch.mutator.apply(self.population)
-
-                # 4. Data Collection
+                # 3. Data Collection for graphs and analysis
                 for sampler in self.samplers:
                     if sampler.is_sampling_time(self.current_generation):
                         sampler.sample(self.population, self.current_generation)
+
+                    if hasattr(sampler, 'record_generation'):
+                        sampler.record_generation(self.current_generation, parent_indices)
+
+                # 4. Mutate (Variation)
+                epoch.mutator.apply(self.population)
 
             print(f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})")
 

@@ -54,3 +54,14 @@ sampling:
   - type: "diversity"
     interval: 10
     file: "output/diversity.csv"
+  - type: "tree"
+    interval: 1
+    file: "output/ancestry.csv"
+  - type: "pairwise"
+    interval: 20
+    file: "output/pairwise_identity.csv"
+  - type: "haplotype"
+    interval: 10
+    file: "output/haplotypes.csv"
+    params:
+      top_n: 10
