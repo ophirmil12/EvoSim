@@ -69,6 +69,7 @@ def main():
             print(f"Error: Invalid nucleotide in initial sequence: {e}")
             sys.exit(1)
 
+    # Create Population     TODO: Add support for heterogeneous populations, and so on extensions
     pop = Population.create_homogeneous(
         size=conf['population']['initial_size'],
         genome=genome,

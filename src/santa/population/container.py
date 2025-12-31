@@ -46,7 +46,7 @@ class Population:
         # Generate indices of the individuals who will 'parent' the next generation
         indices = np.random.choice(
             np.arange(self.size),
-            size=self.size,
+            size=self.size,     # TODO: Make size dynamic based on population control strategies
             replace=True,
             p=prob
         )

@@ -152,7 +152,7 @@ class IdentitySampler(Sampler):
 
         plt.title("Sequence Identity to Initial Sequence Over Time")
         plt.xlabel("Generation")
-        # TODO we also need to do as the paper calculates identity - between all pairs
+        # TODO we also need to do as the paper calculates identity - between all pairs, create a new sampler
         plt.ylabel("Avg Identity (Mean) to Initial Sequence")
         plt.ylim(0, 1.05)  # Keeps scale consistent
         plt.grid(True, linestyle='--', alpha=0.7)
