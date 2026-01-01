@@ -54,9 +54,9 @@ sampling:
   - type: "diversity"
     interval: 10
     file: "output/diversity.csv"
-  - type: "tree"
-    interval: 1
-    file: "output/ancestry.csv"
+#  - type: "tree"
+#    interval: 1
+#    file: "output/ancestry.csv"
   - type: "pairwise"
     interval: 20
     file: "output/pairwise_identity.csv"

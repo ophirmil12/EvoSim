@@ -30,7 +30,7 @@ SAMPLER_MAP = {
     'identity': IdentitySampler,
     'fitness': FitnessSampler,
     'diversity': DiversitySampler,
-    'tree': TreeRecorder,
+    'tree': TreeRecorder,                       # Note: computationally intensive - creates large tree sometimes
     'pairwise': PairwiseIdentitySampler,
     'haplotype': HaplotypeFrequencySampler
 }

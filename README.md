@@ -23,5 +23,5 @@ All outputs are saved in the directory specified in the configuration file.
 - Options for different genomes at the start of the simulation
 - **Recombination** models, Insertion and Deletion mutations (need to change genome lengths first)
 - More detailed environmental factors affecting evolution
-- Visualization tools for better analysis of evolutionary trends (+**trees**)
+- Visualization tools for better analysis of evolutionary trends (+ explanatory **trees**)
 - Changing the codebase to match **different lengths of genomes**
