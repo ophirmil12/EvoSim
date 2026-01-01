@@ -30,6 +30,7 @@ class Simulator:
         self.current_individual_ids = []
 
     def run(self):
+        """The main simulation loop"""
         # Start with the founding IDs (0, 1, 2... N-1)
         self.current_individual_ids = list(range(len(self.population.get_matrix())))
 
@@ -47,25 +48,8 @@ class Simulator:
                 # 2. Select survivors (Wright-Fisher) + Record Ancestry
                 parent_indices = self.population.select(fitness_values)
 
-                # 3. Data Collection for graphs and analysis    TODO: Refactor this block - move it to a separate method
-                # A. Update IDs via TreeRecorder
-                new_ids = []
-                for sampler in self.samplers:
-                    if hasattr(sampler, 'record_generation'):
-                        sampler.record_generation(self.current_generation, parent_indices)
-                        new_ids = sampler.last_gen_ids
-
-                if new_ids:
-                    self.current_individual_ids = new_ids
-                # B. Sampling - Now passing 'tree_provider' kwarg
-                for sampler in self.samplers:
-                    if sampler.is_sampling_time(self.current_generation):
-                        sampler.sample(
-                            self.population,
-                            self.current_generation,
-                            ids=self.current_individual_ids,
-                            tree_provider=self.tree_recorder        # The "history book"
-                        )
+                # 3. Data Collection for graphs and analysis
+                self.collect_data(parent_indices)
 
                 # 4. Mutate (Variation)
                 epoch.mutator.apply(self.population)
@@ -75,3 +59,27 @@ class Simulator:
         print("Finalizing samplers...")
         for sampler in self.samplers:
             sampler.finalize()
+
+    def collect_data(self, parent_indices):
+        """Collect data from samplers in the simulation."""
+        # A. Update IDs via TreeRecorder
+        new_ids = []
+        for sampler in self.samplers:
+            if hasattr(sampler, 'record_generation'):
+                sampler.record_generation(self.current_generation, parent_indices)
+                new_ids = sampler.last_gen_ids
+
+        if new_ids:
+            self.current_individual_ids = new_ids
+
+        # B. Sampling - Now passing 'tree_provider' kwarg
+        for sampler in self.samplers:
+            if sampler.is_sampling_time(self.current_generation):
+                sampler.sample(
+                    self.population,
+                    self.current_generation,
+                    ids=self.current_individual_ids,
+                    tree_provider=self.tree_recorder  # The "history book"
+                )
+
+        return new_ids

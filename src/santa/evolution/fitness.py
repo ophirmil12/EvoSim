@@ -2,6 +2,8 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
+from scipy import stats
+
 from ..population.container import Population
 
 
@@ -42,6 +44,7 @@ class NeutralFitness(FitnessModel):
         return np.ones(population.get_count())
 
 
+# TODO: the purifying models need some testing and refinement
 class PurifyingFitness(FitnessModel):
     """Fitness model where mutations reduce fitness exponentially."""
     def __init__(self, intensity: float = 0.1, reference_sequence=None):
@@ -58,8 +61,7 @@ class PurifyingFitness(FitnessModel):
         matrix = population.get_matrix()
 
         # If no reference is set, use the first individual as the 'Wild Type'
-        if self.reference_sequence is None:
-            self.reference_sequence = matrix[0].copy()
+        self.update_reference_to_consensus(population)
 
         # 1. Count mutations relative to reference for every row
         # matrix != reference_sequence uses NumPy broadcasting
@@ -70,6 +72,36 @@ class PurifyingFitness(FitnessModel):
         fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
 
         # Ensure fitness never hits exactly zero to avoid math errors in selection
+        return np.maximum(fitness_scores, 1e-10)
+
+    def update_reference_to_consensus(self, population: Population):
+        """Sets the reference to the most common nucleotide at each site."""
+        matrix = population.get_matrix()
+        # Find the mode (most frequent value) for each column
+        # axis=0 means operate on columns
+        consensus, _ = stats.mode(matrix, axis=0)
+        self.reference_sequence = consensus.flatten()
+
+
+class SiteSpecificPurifyingFitness(FitnessModel):
+    def __init__(self, site_intensities: np.ndarray, reference_sequence: np.ndarray):
+        super().__init__(reference_sequence)
+        # site_intensities is an array of length L (e.g., [0.5, 0.01, 0.01, 0.9...])
+        self.site_intensities = site_intensities
+
+    def evaluate_population(self, population: Population) -> np.ndarray:
+        matrix = population.get_matrix()
+
+        # 1. Find where mutations are (Boolean matrix)
+        mutations = (matrix != self.reference_sequence)
+
+        # 2. Multiply each mutation by its specific cost
+        # We use log-space to handle the product (1-s1)*(1-s2)... efficiently
+        weighted_mutation_costs = mutations * np.log(1.0 - self.site_intensities)
+
+        # 3. Sum logs and exponentiate to get final fitness
+        fitness_scores = np.exp(np.sum(weighted_mutation_costs, axis=1))
+
         return np.maximum(fitness_scores, 1e-10)
 
 
@@ -180,7 +212,8 @@ class FitnessRegistry:
         "frequency": FrequencyDependentFitness,
         "exposure": ExposureFitness,
         "categorical": CategoricalFitness,
-        "neutral": NeutralFitness
+        "neutral": NeutralFitness,
+        "site_specific": SiteSpecificPurifyingFitness
     }
 
     @classmethod

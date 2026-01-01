@@ -6,34 +6,12 @@ import sys
 # Internal imports
 from src.santa.simulator import Simulator, Epoch
 from src.santa.genome.sequence import Genome
-from src.santa.population.container import Population
+from src.santa.population.container import PopulationRegistry
 from src.santa.evolution.mutator import NucleotideMutator
 from src.santa.evolution.fitness import FitnessRegistry
-from src.santa.io.sampler import (StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler,
-                                  DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
-from src.santa.io.trees import TreeRecorder
+from src.santa.io.sampler_registry import SamplerRegistry
 
 
-"""
-How the components interact:
-1. cli.py: Takes your config.yaml and assembles the machine.
-2. simulator.py: Runs the clock.
-3. population.py: Holds the "DNA Matrix" - the sequences of all individuals.
-4. mutator.py: Uses a random mask to flip bits in that matrix.
-5. fitness.py: Scores the rows of the matrix.
-6. sampler.py: Records the results.
-"""
-
-SAMPLER_MAP = {
-    'stats': StatisticsSampler,
-    'fasta': FastaSampler,
-    'identity': IdentitySampler,
-    'fitness': FitnessSampler,
-    'diversity': DiversitySampler,
-    'tree': TreeRecorder,                       # Note: computationally intensive - creates a large tree sometimes
-    'pairwise': PairwiseIdentitySampler,
-    'haplotype': HaplotypeFrequencySampler
-}
 
 def main():
     """
@@ -84,11 +62,7 @@ def main():
             sys.exit(1)
 
     # Create Population     TODO: Add support for heterogeneous populations, and so on extensions
-    pop = Population.create_homogeneous(
-        size=conf['population']['initial_size'],
-        genome=genome,
-        sequence=initial_seq
-    )
+    pop = PopulationRegistry.get(conf, initial_seq, genome)
 
     # 3. Setup Epochs
     epochs = []
@@ -115,6 +89,8 @@ def main():
         # Categorical Fitness needs a 1D NumPy array for site weights
         elif fit_type == "categorical" and "site_weights" in fitness_params:
             fitness_params['site_weights'] = np.array(fitness_params['site_weights'])
+        elif fit_type == "site_specific":
+            fitness_params['site_intensities'] = np.array(fitness_params['site_intensities'])
 
         # C. Instantiate via Registry
         fitness = FitnessRegistry.get(
@@ -129,28 +105,8 @@ def main():
             fitness_model=fitness
         ))
 
-    # 4. Setup Samplers     TODO: move this to a factory method
-    samplers = []
-    for s_conf in conf.get('sampling', []):
-        sampler_class = SAMPLER_MAP.get(s_conf['type'])
-        if sampler_class:
-            # Special handling for tree which needs initial population size
-            if s_conf['type'] == 'tree':
-                samplers.append(sampler_class(
-                    s_conf['interval'],
-                    s_conf['file'],
-                    initial_size=conf['population']['initial_size']
-                ))
-            elif s_conf['type'] == 'fasta':
-                samplers.append(sampler_class(
-                    s_conf['interval'],
-                    s_conf['file'],
-                    s_conf['interval']          # backtrack_steps = interval, for fasta
-                ))
-            else:
-                samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
-        else:
-            print(f"Warning: Unknown sampler type '{s_conf['type']}'")
+    # 4. Setup Samplers
+    samplers = SamplerRegistry.get_samplers(conf=conf)
 
     # 5. Run
     sim = Simulator(population=pop, epochs=epochs, samplers=samplers)

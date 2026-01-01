@@ -7,7 +7,11 @@ population:
   initial_size: 50  # Number of sequences in the first generation
   # OPTIONAL: Provide a starting sequence.
   # If commented out or removed, it will be random.
-  initial_sequence: "AAAAA"
+  # initial_sequence: "AAAAA"
+  # Or, choose multiple sequences
+  initial_distribution:
+    "AAAAA": 25
+    "TTTTT": 25
 
 # 3. Epochs: Define the evolutionary "stages"
 # You can add multiple epochs to simulate changing environments
@@ -15,11 +19,11 @@ epochs:
   - name: "Baseline_Evolution"
     generations: 500  # Run for 500 generations
     mutator:
-      rate: 0.003    # Probability of mutation per site per replication
+      rate: 0.05    # Probability of mutation per site per replication
     fitness:
       type: "purifying"
       params:
-        intensity: 0.0005   # Higher = stronger selection against mutations
+        intensity: 0.05   # Higher = stronger selection against mutations
   - name: "Converged_Evolution"
     generations: 500
     mutator:
@@ -55,6 +59,6 @@ sampling:
     interval: 10
     file: "output/identity.csv"
 
-  - type: "tree"
-    interval: 10
-    file: "output/ancestry.csv"
+#  - type: "tree"
+#    interval: 10
+#    file: "output/ancestry.csv"
