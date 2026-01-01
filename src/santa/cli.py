@@ -61,7 +61,7 @@ def main():
             print("Error: Genome length must be specified if no initial sequence is provided.")
             sys.exit(1)
 
-    # Create Population     TODO: Add support for heterogeneous populations, and so on extensions
+    # Create Population
     pop = PopulationRegistry.get(conf, initial_seq, genome)
 
     # 3. Setup Epochs
@@ -71,28 +71,7 @@ def main():
         epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
 
         # Setup Fitness Model
-        fitness_params = e_conf['fitness'].get('params', {}).copy()  # Use copy to avoid mutation issues
-        # A. Global Reference handling: If initial sequence exists, inject it
-        if initial_seq is not None:
-            fitness_params['reference_sequence'] = initial_seq
-
-        # B. Model-Specific Pre-processing (Converting lists to NumPy arrays)
-        fit_type = e_conf['fitness']['type'].lower()
-
-        # --- Model-Specific Requirements ---
-        # Exposure Fitness needs a mutator to drift the peak over time
-        if fit_type == "exposure":
-            fitness_params['mutator'] = epoch_mutator
-        # Epistatic Fitness needs a 2D NumPy array for interactions
-        elif fit_type == "epistatic" and "interaction_matrix" in fitness_params:
-            fitness_params['interaction_matrix'] = np.array(fitness_params['interaction_matrix'])
-        # Categorical Fitness needs a 1D NumPy array for site weights
-        elif fit_type == "categorical" and "site_weights" in fitness_params:
-            fitness_params['site_weights'] = np.array(fitness_params['site_weights'])
-        elif fit_type == "site_specific":
-            fitness_params['site_intensities'] = np.array(fitness_params['site_intensities'])
-
-        # C. Instantiate via Registry
+        fitness_params, fit_type = FitnessRegistry.fitness_type_and_params(e_conf, initial_seq, epoch_mutator)
         fitness = FitnessRegistry.get(
             fit_type,
             **fitness_params
