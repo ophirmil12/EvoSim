@@ -18,10 +18,10 @@ from src.santa.io.trees import TreeRecorder
 How the components interact:
 1. cli.py: Takes your config.yaml and assembles the machine.
 2. simulator.py: Runs the clock.
-3. population.py: Holds the "DNA Matrix."
+3. population.py: Holds the "DNA Matrix" - the sequences of all individuals.
 4. mutator.py: Uses a random mask to flip bits in that matrix.
 5. fitness.py: Scores the rows of the matrix.
-6. sampler.py: Records the results to results.csv.
+6. sampler.py: Records the results.
 """
 
 SAMPLER_MAP = {
@@ -30,7 +30,7 @@ SAMPLER_MAP = {
     'identity': IdentitySampler,
     'fitness': FitnessSampler,
     'diversity': DiversitySampler,
-    'tree': TreeRecorder,                       # Note: computationally intensive - creates large tree sometimes
+    'tree': TreeRecorder,                       # Note: computationally intensive - creates a large tree sometimes
     'pairwise': PairwiseIdentitySampler,
     'haplotype': HaplotypeFrequencySampler
 }
