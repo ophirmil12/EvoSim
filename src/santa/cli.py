@@ -59,20 +59,28 @@ def main():
         sys.exit(1)
 
     # 2. Initialize Core Components
-    genome = Genome(length=conf['genome']['length'])
-
     initial_seq = None
     if 'initial_sequence' in conf['population']:
         seq_string = conf['population']['initial_sequence'].upper()
-        if len(seq_string) != genome.length:
+        if 'genome' in conf and 'length' in conf['genome']:
+            genome_length = conf['genome']['length']
+        else:
+            genome_length = len(seq_string)
+        if len(seq_string) != genome_length:
             print("Error: Initial sequence length does not match genome length.")
             sys.exit(1)
-
         mapping = {'A':0, 'C':1, 'G':2, 'T':3}
         try:
             initial_seq = np.array([mapping[base] for base in seq_string], dtype=np.uint8)
         except KeyError as e:
             print(f"Error: Invalid nucleotide in initial sequence: {e}")
+            sys.exit(1)
+        genome = Genome(length=genome_length)
+    else:
+        if 'genome' in conf and 'length' in conf['genome']:
+            genome = Genome(length=conf['genome']['length'])
+        else:
+            print("Error: Genome length must be specified if no initial sequence is provided.")
             sys.exit(1)
 
     # Create Population     TODO: Add support for heterogeneous populations, and so on extensions
@@ -121,7 +129,7 @@ def main():
             fitness_model=fitness
         ))
 
-    # 4. Setup Samplers
+    # 4. Setup Samplers     TODO: move this to a factory method
     samplers = []
     for s_conf in conf.get('sampling', []):
         sampler_class = SAMPLER_MAP.get(s_conf['type'])
@@ -132,6 +140,12 @@ def main():
                     s_conf['interval'],
                     s_conf['file'],
                     initial_size=conf['population']['initial_size']
+                ))
+            elif s_conf['type'] == 'fasta':
+                samplers.append(sampler_class(
+                    s_conf['interval'],
+                    s_conf['file'],
+                    s_conf['interval']          # backtrack_steps = interval, for fasta
                 ))
             else:
                 samplers.append(sampler_class(s_conf['interval'], s_conf['file']))

@@ -18,7 +18,10 @@ class TreeRecorder(Sampler):
         self.last_gen_ids = list(range(initial_size))
         self.next_id = initial_size
 
-    def sample(self, population, generation: int):
+        # A fast lookup for backtracking (Child ID -> Parent ID)
+        self.parent_map = {i: -1 for i in range(initial_size)}
+
+    def sample(self, population, generation: int, **kwargs):
         """
         The standard sample method is required by the base class.
         For TreeRecorder, we primarily use the custom record_generation method.
@@ -42,11 +45,24 @@ class TreeRecorder(Sampler):
                 "parent_id": parent_id,
                 "generation": generation
             })
+            # Update the fast lookup map
+            self.parent_map[node_id] = parent_id
+
             current_gen_ids.append(node_id)
             self.next_id += 1
 
         # Move current IDs to last_gen_ids for the next loop
         self.last_gen_ids = current_gen_ids
+
+    def get_ancestor(self, current_id: int, generations_back: int) -> int:
+        """Walks up the tree N steps to find the ancestor ID."""
+        curr = current_id
+        for _ in range(generations_back):
+            # If we hit the root (-1) or a missing link, stop
+            if curr not in self.parent_map or self.parent_map[curr] == -1:
+                break
+            curr = self.parent_map[curr]
+        return curr
 
     def finalize(self):
         """Main entry point for post-simulation analysis."""
@@ -96,6 +112,8 @@ class TreeRecorder(Sampler):
         }
 
     def _save_newick_tree(self, data):
+        # TODO: add the lineages that hasn't survived using IDs and pointers in the FASTA
+        # TODO: combine the tree and fasta samplers?
         """Constructs and saves the pruned Newick string."""
         import sys
         sys.setrecursionlimit(max(2000, len(data['df'])))
@@ -148,6 +166,7 @@ class TreeRecorder(Sampler):
         plt.close()
 
     def _save_tree_plot(self, data):
+        # TODO: add the lineages that hasn't survived to the tree
         """
         Step 4: Plots the pruned tree, coloring nodes/branches by generation.
         Explicitly creates fig and ax to solve the Colorbar ValueError.

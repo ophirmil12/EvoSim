@@ -23,7 +23,7 @@ class Sampler(ABC):
         return generation % self.interval == 0
 
     @abstractmethod
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         """Must be implemented by child classes."""
         pass
 
@@ -41,7 +41,7 @@ class StatisticsSampler(Sampler):
         super().__init__(interval, output_path)
         self.history = []
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         """
         Calculates and stores metrics for the current generation.
         """
@@ -76,27 +76,43 @@ class FastaSampler(Sampler):
     Exports population sequences to a FASTA file.
     """
 
-    def __init__(self, interval: int, output_path: str):
+    def __init__(self, interval: int, output_path: str, backtrack_steps: int = 50):
         super().__init__(interval, output_path)
         # DNA mapping
         self.alphabet = np.array(['A', 'C', 'G', 'T'])
+        self.backtrack_steps = backtrack_steps
 
         # Ensure the file is empty
         with open(self.output_path, 'w') as f:
             pass  # Just create/clear the file
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, ids: list = None, tree_provider=None, **kwargs):
         matrix = population.get_matrix()
+        fasta_lines = []
 
-        # We'll save a subset or the whole population
-        # Format: >gen_[gen]_ind_[index]
-        with open(self.output_path, 'a') as f:  # 'a' for append
-            for i in range(len(matrix)):
-                # Convert numbers to characters
-                seq_str = "".join(self.alphabet[matrix[i]])
-                # generation and individual index in header
-                f.write(f">gen_{generation}_ind_{i}\n")
-                f.write(f"{seq_str}\n")
+        for i in range(len(matrix)):
+            seq_str = "".join(self.alphabet[matrix[i]])
+            curr_id = ids[i] if ids is not None else i
+
+            # Ancestry Lookup Logic
+            ancestor_tag = ""
+            if tree_provider:
+                # Ask the TreeRecorder for the ancestor N generations ago
+                anc_id = tree_provider.get_ancestor(curr_id, self.backtrack_steps)
+                ancestor_tag = f"|anc_gen_{max(0, generation - self.backtrack_steps)}:{anc_id}"
+
+            # Format: >id:205|gen:100|idx:5|anc_gen_50:102
+            header = f">id:{curr_id}|gen:{generation}|idx:{i}{ancestor_tag}\n"
+            fasta_lines.append(header)
+            fasta_lines.append(f"{seq_str}\n")
+
+        # Open file once and write everything
+        with open(self.output_path, 'a') as f:
+            f.writelines(fasta_lines)
+
+    def finalize(self):
+        """A hook for any finalization if needed."""
+        pass
 
 
 
@@ -110,7 +126,7 @@ class IdentitySampler(Sampler):
         self.reference_sequence = None
         self.history = []
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         matrix = population.get_matrix()
 
         # Capture the initial sequence from the first generation sampled
@@ -168,7 +184,7 @@ class FitnessSampler(Sampler):
         super().__init__(interval, output_path)
         self.history = []
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         # Capturing fitness from the population object
         fitness_vals = getattr(population, 'last_fitness', np.array([1.0]))
         avg_fit = fitness_vals.mean()
@@ -196,7 +212,7 @@ class DiversitySampler(Sampler):
         super().__init__(interval, output_path)
         self.history = []
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         matrix = population.get_matrix()
         unique_strains = len(np.unique(matrix, axis=0))
 
@@ -228,7 +244,7 @@ class PairwiseIdentitySampler(Sampler):
         super().__init__(interval, output_path)
         self.history = []
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         matrix = population.get_matrix()
         # Sub-sample to maintain performance
         n = min(50, len(matrix))
@@ -278,7 +294,7 @@ class HaplotypeFrequencySampler(Sampler):
         self.history = []
         self.top_n = top_n
 
-    def sample(self, population, generation: int):
+    def sample(self, population, generation: int, **kwargs):
         matrix = population.get_matrix()
         # Identify unique sequences and their counts
         unique_seqs, counts = np.unique(matrix, axis=0, return_counts=True)

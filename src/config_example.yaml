@@ -54,3 +54,7 @@ sampling:
   - type: "identity"
     interval: 10
     file: "output/identity.csv"
+
+  - type: "tree"
+    interval: 10
+    file: "output/ancestry.csv"

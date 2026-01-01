@@ -1,0 +1,42 @@
+# 1. Genome: Standard length for observing diversity
+genome:
+  length: 50
+
+# 2. Population: Starting setup
+population:
+  initial_size: 200
+  initial_sequence: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+# 3. Epochs: Low Selection / High Diversity
+epochs:
+  - name: "Drift_and_Diversification"
+    generations: 500
+    mutator:
+      rate: 0.05    # High mutation rate to push individuals away from each other
+    fitness:
+      type: "purifying"
+      params:
+        intensity: 0.0001 # Extremely low selection; almost neutral evolution
+
+# 4. Sampling: High-Resolution Tree and Diversity Monitoring
+sampling:
+  - type: "tree"
+    interval: 1
+    file: "output/low_selection/ancestry.csv"
+  - type: "pairwise"
+    interval: 20
+    file: "output/low_selection/pairwise_distance.csv"
+  - type: "haplotype"
+    interval: 10
+    file: "output/low_selection/haplotypes.csv"
+    params:
+      top_n: 15       # Increased top_n to see the many competing strains
+  - type: "diversity"
+    interval: 10
+    file: "output/low_selection/diversity.csv"
+  - type: "stats"
+    interval: 10
+    file: "output/low_selection/stats.csv"
+  - type: "fitness"
+    interval: 10
+    file: "output/low_selection/fitness.csv"

@@ -3,6 +3,8 @@
 
 import logging
 
+from src.santa.io.trees import TreeRecorder
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,9 +25,14 @@ class Simulator:
         self.population = population
         self.epochs = epochs
         self.samplers = samplers
+        self.tree_recorder = next((s for s in samplers if isinstance(s, TreeRecorder)), None)
         self.current_generation = 0
+        self.current_individual_ids = []
 
     def run(self):
+        # Start with the founding IDs (0, 1, 2... N-1)
+        self.current_individual_ids = list(range(len(self.population.get_matrix())))
+
         for epoch in self.epochs:
             print(f"Running Epoch: {epoch.name}...")
             for g in range(epoch.generations):
@@ -40,13 +47,25 @@ class Simulator:
                 # 2. Select survivors (Wright-Fisher) + Record Ancestry
                 parent_indices = self.population.select(fitness_values)
 
-                # 3. Data Collection for graphs and analysis
+                # 3. Data Collection for graphs and analysis    TODO: Refactor this block - move it to a separate method
+                # A. Update IDs via TreeRecorder
+                new_ids = []
                 for sampler in self.samplers:
-                    if sampler.is_sampling_time(self.current_generation):
-                        sampler.sample(self.population, self.current_generation)
-
                     if hasattr(sampler, 'record_generation'):
                         sampler.record_generation(self.current_generation, parent_indices)
+                        new_ids = sampler.last_gen_ids
+
+                if new_ids:
+                    self.current_individual_ids = new_ids
+                # B. Sampling - Now passing 'tree_provider' kwarg
+                for sampler in self.samplers:
+                    if sampler.is_sampling_time(self.current_generation):
+                        sampler.sample(
+                            self.population,
+                            self.current_generation,
+                            ids=self.current_individual_ids,
+                            tree_provider=self.tree_recorder        # The "history book"
+                        )
 
                 # 4. Mutate (Variation)
                 epoch.mutator.apply(self.population)
@@ -55,5 +74,4 @@ class Simulator:
 
         print("Finalizing samplers...")
         for sampler in self.samplers:
-            if hasattr(sampler, 'finalize'):
-                sampler.finalize()
+            sampler.finalize()
