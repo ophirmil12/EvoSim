@@ -4,12 +4,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from src.santa.genome.sequence import Genome
-from src.santa.population.container import Population
-from src.santa.evolution.mutator import NucleotideMutator
-from src.santa.evolution.fitness import PurifyingFitness
-from src.santa.simulator import Simulator, Epoch
-from src.santa.io.sampler import StatisticsSampler
+from src.servine.genome.sequence import Genome
+from src.servine.population.container import Population
+from src.servine.evolution.mutator import NucleotideMutator
+from src.servine.evolution.fitness import PurifyingFitness
+from src.servine.simulator import Simulator, Epoch
+from src.servine.io.sampler import StatisticsSampler
 
 def run_test():
     print("🚀 Initializing Test Run...")

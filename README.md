@@ -11,7 +11,7 @@ To run the Evolution Simulator, follow these steps:
 1. Clone the Repository
 2. In the terminal, navigate to the project directory
 3. $env:PYTHONPATH = "src"
-4. py -m santa.cli config.yaml
+4. py -m servine.cli config.yaml
 
 To customize the simulation parameters, edit the `config.yaml` file before running the simulator.
 All outputs are saved in the directory specified in the configuration file.
@@ -19,7 +19,7 @@ All outputs are saved in the directory specified in the configuration file.
 
 ## File Structure
 
-### ./src/santa/      TODO: change name from santa to ???
+### ./src/servine/
 - cli.py
   - main: read config file, initialize core components, set up epochs, create samplers, run simulation loop
 - simulator.py

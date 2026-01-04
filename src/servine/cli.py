@@ -4,12 +4,12 @@ import yaml
 import sys
 
 # Internal imports
-from src.santa.simulator import Simulator, Epoch
-from src.santa.genome.sequence import Genome
-from src.santa.population.container import PopulationRegistry
-from src.santa.evolution.mutator import NucleotideMutator
-from src.santa.evolution.fitness import FitnessRegistry
-from src.santa.io.sampler_registry import SamplerRegistry
+from src.servine.simulator import Simulator, Epoch
+from src.servine.genome.sequence import Genome
+from src.servine.population.container import PopulationRegistry
+from src.servine.evolution.mutator import NucleotideMutator
+from src.servine.evolution.fitness import FitnessRegistry
+from src.servine.io.sampler_registry import SamplerRegistry
 
 
 
@@ -17,11 +17,10 @@ def main():
     """
     Run with:
          <.../EvoSim> $env:PYTHONPATH = "src"
-         <.../EvoSim> py -m santa.cli src/config.yaml
+         <.../EvoSim> py -m servine.cli src/config.yaml
     in the command line (checked working in Windows PowerShell).
     """
-    # TODO better name and description
-    parser = argparse.ArgumentParser(description="SANTA-SIM Python: Evolutionary Simulator")
+    parser = argparse.ArgumentParser(description="SERVINE: Evolutionary Simulator")
 
     # Simple positional argument for the config file
     parser.add_argument("config", help="Path to the YAML configuration file")

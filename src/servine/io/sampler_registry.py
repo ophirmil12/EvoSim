@@ -1,6 +1,6 @@
-from src.santa.io.sampler import (StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler,
+from src.servine.io.sampler import (StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
-from src.santa.io.trees import TreeRecorder
+from src.servine.io.trees import TreeRecorder
 
 
 class SamplerRegistry:

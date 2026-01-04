@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.santa.io.sampler import Sampler
+from src.servine.io.sampler import Sampler
 
 
 class TreeRecorder(Sampler):

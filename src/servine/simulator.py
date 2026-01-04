@@ -3,7 +3,7 @@
 
 import logging
 
-from src.santa.io.trees import TreeRecorder
+from src.servine.io.trees import TreeRecorder
 
 logger = logging.getLogger(__name__)
 
