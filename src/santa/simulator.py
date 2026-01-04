@@ -49,7 +49,10 @@ class Simulator:
                 parent_indices = self.population.select(fitness_values)
 
                 # 3. Data Collection for graphs and analysis
-                self.collect_data(parent_indices)
+                if self.tree_recorder:
+                    # We always need to know who the parents were to update the 'jump' map
+                    self.tree_recorder.record_intermediate_step(parent_indices)
+                self.collect_data()
 
                 # 4. Mutate (Variation)
                 epoch.mutator.apply(self.population)
@@ -60,26 +63,17 @@ class Simulator:
         for sampler in self.samplers:
             sampler.finalize()
 
-    def collect_data(self, parent_indices):
+    def collect_data(self):
         """Collect data from samplers in the simulation."""
-        # A. Update IDs via TreeRecorder
-        new_ids = []
-        for sampler in self.samplers:
-            if hasattr(sampler, 'record_generation'):
-                sampler.record_generation(self.current_generation, parent_indices)
-                new_ids = sampler.last_gen_ids
-
-        if new_ids:
-            self.current_individual_ids = new_ids
-
-        # B. Sampling - Now passing 'tree_provider' kwarg
+        # Sampling - Now passing 'tree_provider' kwarg
         for sampler in self.samplers:
             if sampler.is_sampling_time(self.current_generation):
-                sampler.sample(
+                result = sampler.sample(
                     self.population,
                     self.current_generation,
                     ids=self.current_individual_ids,
                     tree_provider=self.tree_recorder  # The "history book"
                 )
-
-        return new_ids
+                # Update our global IDs if the TreeRecorder just minted new ones
+                if isinstance(sampler, TreeRecorder) and result:
+                    self.current_individual_ids = result

@@ -1,0 +1,36 @@
+# 1. Genome: Define the physical sequence properties
+genome:
+  length: 5        # Number of nucleotides, need to match initial_sequence length, if provided
+
+# 2. Population: Define how many individuals start the simulation
+population:
+  initial_size: 50  # Number of sequences in the first generation
+  # OPTIONAL: Provide a starting sequence.
+  # If commented out or removed, it will be random.
+  initial_sequence: "AAAAA"
+
+# 3. Epochs: Define the evolutionary "stages"
+# You can add multiple epochs to simulate changing environments
+epochs:
+  - name: "Baseline_Evolution"
+    generations: 50  # Run for 500 generations
+    mutator:
+      rate: 0.0    # Probability of mutation per site per replication
+    fitness:
+      type: "purifying"
+      params:
+        intensity: 0.05   # Higher = stronger selection against mutations
+
+
+# 4. Sampling: Define what data to save and how often
+sampling:
+  - type: "stats"
+    interval: 10      # Save statistics every 10 generations
+    file: "output/results.csv"
+  - type: "fasta"
+    interval: 100     # Save the full population sequences at the end
+    file: "output/final_population.fasta"
+
+  - type: "tree"
+    interval: 1
+    file: "output/ancestry.csv"
