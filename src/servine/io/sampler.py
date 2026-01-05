@@ -176,26 +176,44 @@ class DiversitySampler(Sampler):
     def sample(self, population, generation: int, **kwargs):
         matrix = population.get_matrix()
         unique_strains = len(np.unique(matrix, axis=0))
+        pop_count = population.get_count()
 
         self.history.append({
             "generation": generation,
             "unique_strains": unique_strains,
-            "population_size": population.get_count(),
-            "diversity_ratio": unique_strains / population.get_count()
+            "population_size": pop_count,
+            "diversity_ratio": unique_strains / pop_count
         })
         pd.DataFrame(self.history).to_csv(self.output_path, index=False)
 
     def finalize(self):
         if not self.history: return
         df = pd.read_csv(self.output_path)
-        plt.figure(figsize=(10, 5))
-        plt.fill_between(df['generation'], df['unique_strains'], color='purple', alpha=0.3)
-        plt.plot(df['generation'], df['unique_strains'], color='purple', linewidth=2)
-        plt.title("Viral Population Diversity (Unique Strains)")
-        plt.xlabel("Generation")
-        plt.ylabel("Number of Unique Genotypes")
-        plt.grid(True, alpha=0.3)
-        plt.savefig(self.output_path.with_suffix('.png'))
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+        # Primary Axis: Absolute Unique Genotypes
+        color_strains = 'tab:purple'
+        ax1.set_xlabel('Generation')
+        ax1.set_ylabel('Number of Unique Genotypes', color=color_strains, fontweight='bold')
+        ax1.fill_between(df['generation'], df['unique_strains'], color=color_strains, alpha=0.2)
+        ax1.plot(df['generation'], df['unique_strains'], color=color_strains, linewidth=2, label='Unique Strains')
+        ax1.tick_params(axis='y', labelcolor=color_strains)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        # Secondary Axis: Diversity Ratio (Normalized)
+        ax2 = ax1.twinx()
+        color_ratio = 'tab:cyan'
+        ax2.set_ylabel('Diversity Ratio (Unique/Total)', color=color_ratio, fontweight='bold')
+        ax2.plot(df['generation'], df['diversity_ratio'], color=color_ratio, linestyle='--', linewidth=1.5,
+                 label='Diversity Ratio')
+        ax2.tick_params(axis='y', labelcolor=color_ratio)
+        ax2.set_ylim(0, 1.05)  # Ratio is always between 0 and 1
+        # Title and Layout
+        plt.title("Viral Population Diversity Dynamics", fontsize=14)
+        # Combined Legend
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+        plt.tight_layout()
+        plt.savefig(self.output_path.with_suffix('.png'), dpi=300)
         plt.close()
 
 

@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 from src.servine.io.sampler import Sampler
 
@@ -66,51 +67,75 @@ class TreeRecorder(Sampler):
         return curr
 
     def finalize(self):
-        """Main entry point for post-simulation analysis."""
+        """Main entry point for post-simulation analysis with progress tracking."""
         if not self.ancestry:
             return
 
+        # 0. Save CSV
+        start = time.time()
+        print("Writing ancestry CSV...", end=" ", flush=True)
         df = pd.DataFrame(self.ancestry)
         df.to_csv(self.output_path, index=False)
-
-        # 1. Prepare data structures for efficient lookup
+        print(f"took {time.time() - start:.2f}s")
+        # 1. Prepare data structures
+        start = time.time()
+        print("Preparing analysis data (tracing lineages)...", end=" ", flush=True)
         analysis_data = self._prepare_analysis_data(df)
-
-        # 2. Generate the Newick file (The "Paper" Tree)
+        print(f"took {time.time() - start:.2f}s")
+        # 2. Generate Newick
+        start = time.time()
+        print("Generating Newick tree file...", end=" ", flush=True)
         self._save_newick_tree(analysis_data)
-
-        # 3. Generate the LTT Plot (Temporal Dynamics)
+        print(f"took {time.time() - start:.2f}s")
+        # 3. Generate LTT Plot
+        start = time.time()
+        print("Generating Lineages Through Time (LTT) plot...", end=" ", flush=True)
         self._save_ltt_plot(analysis_data)
-
-        # 4. Generate the Tree Plot (Top-Down View)
+        print(f"took {time.time() - start:.2f}s")
+        # 4. Generate Tree Plot
+        start = time.time()
+        print("Generating topological tree visualization (this may take a while)...", end=" ", flush=True)
         self._save_tree_plot(analysis_data)
+        print(f"took {time.time() - start:.2f}s")
 
     def _prepare_analysis_data(self, df):
-        """Filters the ancestry to only include lineages of final survivors."""
-        last_gen = df['generation'].max()
+        """Refined to build all necessary structures in fewer passes."""
+        last_gen = int(df['generation'].max())
         survivors = set(df[df['generation'] == last_gen]['id'])
 
-        parent_map = dict(zip(df['id'], df['parent_id']))
-        id_to_gen = dict(zip(df['id'], df['generation']))
+        # Build maps in one pass
+        parent_map = {}
+        children_map = {}
+        id_to_gen = {}
+        for _, row in df.iterrows():
+            cid, pid, gen = int(row['id']), int(row['parent_id']), int(row['generation'])
+            parent_map[cid] = pid
+            id_to_gen[cid] = gen
+            id_to_gen[pid] = id_to_gen.get(pid, 0)  # Ensure parent has a gen (defaults to 0 for roots)
+            children_map.setdefault(pid, []).append(cid)
 
-        # Trace upward from survivors to find the 'Active' skeleton
+        # Trace active lineages and calculate LTT simultaneously
         active_ids = set(survivors)
+        ltt_counts = {g: set() for g in range(last_gen + 1)}
+
         for s_id in survivors:
             curr = s_id
             while curr in parent_map:
+                gen = id_to_gen[curr]
+                ltt_counts[gen].add(curr)
                 curr = parent_map[curr]
                 if curr == -1: break
                 active_ids.add(curr)
+            ltt_counts[0].add(curr if curr != -1 else 0)
+
+        # Convert LTT sets to counts immediately
+        ltt_data = {g: len(ids) for g, ids in ltt_counts.items()}
 
         return {
-            "df": df,
-            "parent_map": parent_map,
-            "id_to_gen": id_to_gen,
-            "active_ids": active_ids,
-            "survivors": survivors,
-            "last_gen": last_gen,
-            #"root_id": min(active_ids) if active_ids else -1
-            "root_ids": [i for i in df['id'] if parent_map[i] == -1]  # Find all roots, for plotting also extinct lineages
+            "df": df, "parent_map": parent_map, "children_map": children_map,
+            "id_to_gen": id_to_gen, "active_ids": active_ids,
+            "survivors": survivors, "last_gen": last_gen, "ltt_data": ltt_data,
+            "root_ids": [pid for pid in children_map if pid not in parent_map]
         }
 
     def _save_newick_tree(self, data):
@@ -151,19 +176,8 @@ class TreeRecorder(Sampler):
 
     def _save_ltt_plot(self, data):
         """Generates the Lineages Through Time visualization."""
-        ltt_counts = {gen: set() for gen in range(int(data['last_gen']) + 1)}
-
-        for s_id in data['survivors']:
-            curr = s_id
-            while curr in data['parent_map']:
-                gen = data['id_to_gen'].get(curr, 0)
-                ltt_counts[gen].add(curr)
-                curr = data['parent_map'][curr]
-                if curr == -1: break
-            ltt_counts[0].add(curr if curr != -1 else 0)
-
-        gens = sorted(ltt_counts.keys())
-        counts = [len(ltt_counts[g]) for g in gens]
+        gens = sorted(data['ltt_data'].keys())
+        counts = [data['ltt_data'][g] for g in gens]
 
         plt.figure(figsize=(10, 6))
         plt.step(gens, counts, where='post', color='darkorange', linewidth=2)
@@ -291,5 +305,5 @@ class TreeRecorder(Sampler):
         ax.legend(handles=custom_lines, loc='upper left')
 
         output_file = str(self.output_path).replace(".csv", "") + "_tree.png"
-        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        plt.savefig(output_file, dpi=600, bbox_inches='tight')
         plt.close(fig)
