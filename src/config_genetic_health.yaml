@@ -39,9 +39,6 @@ epochs:
 
 # 4. Sampling: Monitoring the Outbreak
 sampling:
-  - type: "stats"
-    interval: 10
-    file: "output/viral_stats.csv"
   - type: "identity"
     interval: 5
     file: "output/viral_identity.csv"

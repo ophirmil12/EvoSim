@@ -52,7 +52,6 @@ All outputs are saved in the directory specified in the configuration file.
 - io/
   - sampler.py
     - Sampler: Base class for data samplers
-    - StatisticsSampler(Sampler): Records population-level metrics to a CSV file.
     - FastaSampler(Sampler): Exports population sequences to a FASTA file. Also records ancestors to reconstruct phylogenetic trees.
     - IdentitySampler(Sampler): Plots/Records the average sequence identity relative to the initial sequence.
     - PairwiseIdentitySampler(Sampler): Calculates Average Pairwise Distance using the Jukes-Cantor (JC69) model.

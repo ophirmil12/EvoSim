@@ -9,7 +9,6 @@ from src.servine.population.container import Population
 from src.servine.evolution.mutator import NucleotideMutator
 from src.servine.evolution.fitness import PurifyingFitness
 from src.servine.simulator import Simulator, Epoch
-from src.servine.io.sampler import StatisticsSampler
 
 def run_test():
     print("🚀 Initializing Test Run...")
@@ -35,7 +34,7 @@ def run_test():
     )
 
     # 5. Setup Sampling
-    sampler = StatisticsSampler(interval=10, output_path="test_results.csv")
+    sampler = None      # TODO choose some Sampler
 
     # 6. Initialize and Run Simulator
     sim = Simulator(

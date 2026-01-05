@@ -1,4 +1,4 @@
-from src.servine.io.sampler import (StatisticsSampler, FastaSampler, IdentitySampler, FitnessSampler,
+from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
 from src.servine.io.trees import TreeRecorder
 
@@ -6,7 +6,6 @@ from src.servine.io.trees import TreeRecorder
 class SamplerRegistry:
     """Registry for all available samplers."""
     _samplers = {
-        'stats': StatisticsSampler,
         'fasta': FastaSampler,
         'identity': IdentitySampler,
         'fitness': FitnessSampler,

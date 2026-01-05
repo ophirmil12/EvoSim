@@ -32,45 +32,6 @@ class Sampler(ABC):
         pass
 
 
-class StatisticsSampler(Sampler):
-    """
-    Records population-level metrics to a CSV file.
-    """
-
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
-        self.history = []
-
-    def sample(self, population, generation: int, **kwargs):
-        """
-        Calculates and stores metrics for the current generation.
-        """
-        matrix = population.get_matrix()
-
-        # Calculate Genetic Diversity
-        # (Average number of differences between individuals)
-        # For speed, we can estimate this via the number of unique sequences
-        unique_count = len(np.unique(matrix, axis=0))
-
-        # In a real scenario, you'd pass fitness values here too
-        # For now, let's just track the count and diversity
-        row = {
-            "generation": generation,
-            "population_size": population.get_count(),
-            "unique_sequences": unique_count
-        }
-
-        self.history.append(row)
-        self._write_to_disk()
-
-    def _write_to_disk(self):
-        """Writes the accumulated history to a CSV file."""
-        with open(self.output_path, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=self.history[0].keys())
-            writer.writeheader()
-            writer.writerows(self.history)
-
-
 class FastaSampler(Sampler):
     """
     Exports population sequences to a FASTA file.
@@ -219,6 +180,7 @@ class DiversitySampler(Sampler):
         self.history.append({
             "generation": generation,
             "unique_strains": unique_strains,
+            "population_size": population.get_count(),
             "diversity_ratio": unique_strains / population.get_count()
         })
         pd.DataFrame(self.history).to_csv(self.output_path, index=False)

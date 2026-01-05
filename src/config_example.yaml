@@ -49,9 +49,9 @@ epochs:
 
 # 4. Sampling: Define what data to save and how often
 sampling:
-  - type: "stats"
+  - type: "diversity"
     interval: 10      # Save statistics every 10 generations
-    file: "output/results.csv"
+    file: "output/diversity.csv"
   - type: "fasta"
     interval: 100     # Save the full population sequences at the end
     file: "output/final_population.fasta"

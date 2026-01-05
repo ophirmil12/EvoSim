@@ -34,9 +34,6 @@ sampling:
   - type: "diversity"
     interval: 10
     file: "output/low_selection/diversity.csv"
-  - type: "stats"
-    interval: 10
-    file: "output/low_selection/stats.csv"
   - type: "fitness"
     interval: 10
     file: "output/low_selection/fitness.csv"
