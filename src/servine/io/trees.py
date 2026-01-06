@@ -7,6 +7,7 @@ import time
 import sys
 
 from src.servine.io.sampler import Sampler
+from src.servine.color import *
 
 
 
@@ -87,13 +88,13 @@ class TreeRecorder(Sampler):
         start = time.time()
         print("Preparing analysis data (tracing lineages)...", end=" ", flush=True)
         analysis_data = self._prepare_analysis_data(df)
-        print(f"took {time.time() - start:.2f}s")
+        print(bg.WHITE, f"took {time.time() - start:.2f}s", bg.RESET)
 
         # 2. Generate Newick
         start = time.time()
-        print("Generating Newick tree file (this may take a while)...", end=" ", flush=True)
+        print("Generating Newick tree file ", fg.CYAN, "(this may take a while)...", fg.RESET, end=" ", flush=True)
         self._save_newick_tree(analysis_data)
-        print(f"took {time.time() - start:.2f}s")
+        print(bg.WHITE, f"took {time.time() - start:.2f}s", bg.RESET)
 
         # 3. Generate LTT Plot
         self._save_ltt_plot(analysis_data)
@@ -102,7 +103,7 @@ class TreeRecorder(Sampler):
         start = time.time()
         print("Generating topological tree visualization...", end=" ", flush=True)
         self._save_tree_plot(analysis_data)
-        print(f"took {time.time() - start:.2f}s")
+        print(bg.WHITE, f"took {time.time() - start:.2f}s", bg.RESET)
 
     def _prepare_analysis_data(self, df):
         """Refined to build all necessary structures in fewer passes."""
@@ -177,7 +178,7 @@ class TreeRecorder(Sampler):
             with open(self.output_path.with_suffix('.nwk'), 'w') as f:
                 f.write(nwk)
         except Exception as e:
-            print(f"Failed to build Newick: {e}")
+            print(fg.RED, f"Failed to build Newick: {e}", fg.RESET)
 
     def _save_ltt_plot(self, data):
         """Generates the Lineages Through Time visualization."""
