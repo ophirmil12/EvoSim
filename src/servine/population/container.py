@@ -1,5 +1,6 @@
 import numpy as np
-from ..genome.sequence import SequenceHandler, Genome
+from src.servine.genome.sequence import SequenceHandler, Genome
+from src.servine.color import *
 
 
 class Population:
@@ -10,10 +11,10 @@ class Population:
     """
 
     def __init__(self, matrix: np.ndarray):
-        self.matrix = matrix
-        self.size = matrix.shape[0]
-        self.genome_length = matrix.shape[1]
-        self.last_fitness = np.ones(self.size)
+        self.matrix = matrix                            # the main object
+        self.size = matrix.shape[0]                     # size of population TODO make it not fixed? no idea how
+        self.genome_length = matrix.shape[1]            # genome fixed length TODO make it not fixed? no idea how
+        self.last_fitness = np.ones(self.size)          # the fitness values of each organism
 
     @classmethod
     def create_homogeneous(cls, size: int, genome: Genome, sequence: np.ndarray = None):
@@ -53,7 +54,7 @@ class Population:
         # Generate indices of the individuals who will 'parent' the next generation
         indices = np.random.choice(
             np.arange(self.size),
-            size=self.size,     # TODO: Make size dynamic based on population control strategies
+            size=self.size,     # TODO: Make size dynamic based on population control strategies?
             replace=True,
             p=prob
         )
@@ -98,7 +99,7 @@ class PopulationRegistry:
             # Safety Check: If the counts don't add up to initial_size,
             # either truncate or pad with the last sequence type
             if len(all_seqs) != initial_size:
-                print(f"Warning: Distribution total ({len(all_seqs)}) != initial_size ({initial_size}). Adjusting...")
+                print(fg.YELLOW, f"Warning: Distribution total ({len(all_seqs)}) != initial_size ({initial_size}). Adjusting...", fg.RESET)
                 if len(all_seqs) > initial_size:
                     all_seqs = all_seqs[:initial_size]
                 else:

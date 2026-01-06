@@ -6,12 +6,12 @@ from scipy import stats
 
 from ..population.container import Population
 
-
+# TODO: for all the models - compare to the SANTA-SIM git to check that the math is correct
 class FitnessModel(ABC):
     """
     The Base Template for all Fitness Landscapes.
     """
-    def __init__(self, reference_sequence=None):
+    def __init__(self, reference_sequence=None, **kwargs):
         self.reference_sequence = reference_sequence
 
     def set_reference(self, sequence: np.ndarray):
@@ -84,6 +84,12 @@ class PurifyingFitness(FitnessModel):
 
 
 class SiteSpecificPurifyingFitness(FitnessModel):
+    """
+    By defining an array of "site_intensities", we can control on how a mutation
+    in a specific site cause decrease in fitness.
+    Higher "site_intensity" -> lower fitness when mutation caused.
+    Note that a reference sequence is required (the most fit variant).
+    """
     def __init__(self, site_intensities: np.ndarray, reference_sequence: np.ndarray):
         super().__init__(reference_sequence)
         # site_intensities is an array of length L (e.g., [0.5, 0.01, 0.01, 0.9...])
@@ -106,7 +112,10 @@ class SiteSpecificPurifyingFitness(FitnessModel):
 
 
 class EpistaticFitness(FitnessModel):
-    """Fitness model with pairwise epistatic interactions."""
+    """
+    Fitness model with pairwise epistatic interactions.
+    Note: an L*L matrix is required as input.
+    """
     def __init__(self, interaction_matrix: np.ndarray, reference_sequence=None):
         """
         :param interaction_matrix: A 2D matrix where matrix[i, j] is the
@@ -121,7 +130,7 @@ class EpistaticFitness(FitnessModel):
             self.reference_sequence = matrix[0].copy()
 
         # Identify where mutations exist (binary mask)
-        mut_mask = (matrix != self.reference_sequence).astype(float)
+        mut_mask = (matrix != self.reference_sequence)
 
         # Matrix multiplication calculates the sum of pairwise interactions
         # for every individual in one vectorized step.
@@ -160,11 +169,14 @@ class FrequencyDependentFitness(FitnessModel):
 
 class ExposureFitness(PurifyingFitness):
     """
-    Note: Inherits from PurifyingFitness.
     This models a changing environment.
-    Every X generations, the "optimal" sequence changes, and the population must catch up or die.
+    Every X generations, the "optimal" sequence changes,
+        and the population must catch up or die.
+    Note: Inherits from PurifyingFitness.
     """
     def __init__(self, intensity: float, update_interval: int, mutator, **kwargs):
+        # TODO make a way to send a specific mutator to this model, not the general mutator
+        #  (here we might want higher mutation rate than the entire population)
         super().__init__(intensity, **kwargs)
         self.update_interval = update_interval
         self.mutator = mutator          # Uses a mutator to "drift" the peak
@@ -204,49 +216,3 @@ class CategoricalFitness(FitnessModel):
         return fitness
 
 
-class FitnessRegistry:
-    """A simple factory to fetch fitness models by name."""
-    _models = {
-        "purifying": PurifyingFitness,
-        "epistatic": EpistaticFitness,
-        "frequency": FrequencyDependentFitness,
-        "exposure": ExposureFitness,
-        "categorical": CategoricalFitness,
-        "neutral": NeutralFitness,
-        "site_specific": SiteSpecificPurifyingFitness
-    }
-
-    @classmethod
-    def get(cls, name, **params):
-        # Normalize name to lowercase to avoid case-sensitivity issues
-        model_name = name.lower()
-
-        if model_name in cls._models:
-            # Dynamically instantiate the class from the dictionary
-            return cls._models[model_name](**params)
-
-        raise ValueError(f"Unknown fitness model: {name}. Available: {list(cls._models.keys())}")
-
-    @classmethod
-    def fitness_type_and_params(cls, e_conf, initial_seq, epoch_mutator):
-        fitness_params = e_conf['fitness'].get('params', {}).copy()  # Use copy to avoid mutation issues
-        # A. Global Reference handling: If initial sequence exists, inject it
-        if initial_seq is not None:
-            fitness_params['reference_sequence'] = initial_seq
-
-        # B. Model-Specific Pre-processing
-        fit_type = e_conf['fitness']['type'].lower()
-
-        # --- Model-Specific Requirements ---
-        # Exposure Fitness needs a mutator to drift the peak over time
-        if fit_type == "exposure":
-            fitness_params['mutator'] = epoch_mutator
-        # Epistatic Fitness needs a 2D NumPy array for interactions
-        elif fit_type == "epistatic" and "interaction_matrix" in fitness_params:
-            fitness_params['interaction_matrix'] = np.array(fitness_params['interaction_matrix'])
-        # Categorical Fitness needs a 1D NumPy array for site weights
-        elif fit_type == "categorical" and "site_weights" in fitness_params:
-            fitness_params['site_weights'] = np.array(fitness_params['site_weights'])
-        elif fit_type == "site_specific":
-            fitness_params['site_intensities'] = np.array(fitness_params['site_intensities'])
-        return fitness_params, fit_type

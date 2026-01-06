@@ -8,10 +8,12 @@ class Genome:
     """
     Defines the structure and alphabet of the genetic material.
     """
+    ALPHABET = np.array(['A', 'C', 'G', 'T'])
+
     def __init__(self, length: int):
         self.length = length
         # Map: 0:A, 1:C, 2:G, 3:T
-        self.alphabet = np.array(['A', 'C', 'G', 'T'])
+        self.alphabet = Genome.ALPHABET
 
     def get_random_sequence(self) -> np.ndarray:
         """Generates a random initial sequence as an array of integers."""
@@ -20,6 +22,10 @@ class Genome:
     def to_string(self, sequence_array: np.ndarray) -> str:
         """Converts a NumPy integer array back into a DNA string."""
         return "".join(self.alphabet[sequence_array])
+
+    @staticmethod
+    def get_alphabet():
+        return Genome.ALPHABET
 
 
 class SequenceHandler:
@@ -40,8 +46,3 @@ class SequenceHandler:
         else:
             # Everyone starts as a clone of the master
             return np.tile(master_sequence, (size, 1))
-
-    @staticmethod
-    def calculate_distance(seq1, seq2):
-        """Quickly count mutations between two sequences using NumPy."""
-        return np.count_nonzero(seq1 != seq2)

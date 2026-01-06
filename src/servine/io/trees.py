@@ -9,10 +9,15 @@ import sys
 from src.servine.io.sampler import Sampler
 
 
+
 class TreeRecorder(Sampler):
     """
-    A type of Sampler that Tracks the ancestry of every individual
+    A type of Sampler that tracks the ancestry of every individual
      to reconstruct evolutionary history.
+    Capabilities:
+    - Newick file of the ENTIRE simulation
+    - plot LTT
+    - save the full tree in a figure
     """
 
     def __init__(self, interval: int, output_path: str, initial_size: int):

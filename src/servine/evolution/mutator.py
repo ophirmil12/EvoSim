@@ -17,7 +17,40 @@ class Mutator(ABC):
         pass
 
 
+class UnifyMutator(Mutator):
+    """
+    Simple mutator - equal chance for each mutation,
+    and rate determined by user.
+    Assumes alphabet size k = 4 (e.g. A, C, G, T).
+    """
+
+    def __init__(self, rate: float):
+        super().__init__(rate)
+
+    def apply(self, population):
+        matrix = population.get_matrix()
+
+        # Decide which sites mutate
+        mutation_mask = np.random.random(matrix.shape) < self.rate
+        num_mutations = np.count_nonzero(mutation_mask)
+        if num_mutations == 0:
+            return
+
+        current = matrix[mutation_mask]
+
+        # Pick uniformly from the other 3 nucleotides
+        # offset ∈ {1,2,3} guarantees new != old
+        offsets = np.random.randint(1, 4, size=num_mutations)
+        new_vals = (current + offsets) % 4
+
+        matrix[mutation_mask] = new_vals
+
+
 class NucleotideMutator(Mutator):
+    """
+    Simple mutator that gets a rate of mutation, and a bias for
+    transitions/transversions (transversions are rarer).
+    """
     def __init__(self, rate: float, transition_bias: float = 2.0):
         super().__init__(rate)
         self.transition_bias = transition_bias

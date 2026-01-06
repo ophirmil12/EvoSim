@@ -4,12 +4,16 @@
 import logging
 
 from src.servine.io.trees import TreeRecorder
+from src.servine.color import *
 
 logger = logging.getLogger(__name__)
 
 
 class Epoch:
-    """A time period with specific evolutionary rules."""
+    """
+    A time period with specific evolutionary rules.
+    For example - a time period where the virus spreads, or a vaccine found.
+    """
 
     def __init__(self, name, generations, mutator, fitness_model):
         self.name = name
@@ -35,7 +39,7 @@ class Simulator:
         self.current_individual_ids = list(range(len(self.population.get_matrix())))
 
         for epoch in self.epochs:
-            print(f"Running Epoch: {epoch.name}...")
+            print(fg.BLUE, f"Running Epoch: {epoch.name}...", fg.RESET)
             for g in range(epoch.generations):
                 self.current_generation += 1
 
@@ -57,7 +61,7 @@ class Simulator:
                 # 4. Mutate (Variation)
                 epoch.mutator.apply(self.population)
 
-            print(f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})")
+            print(fg.MAGENTA, f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})", fg.RESET)
 
         print("Finalizing samplers...")
         for sampler in self.samplers:

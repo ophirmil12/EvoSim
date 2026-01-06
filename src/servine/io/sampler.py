@@ -8,6 +8,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 
+from src.servine.genome.sequence import Genome
+
+
 
 class Sampler(ABC):
     """
@@ -32,6 +35,7 @@ class Sampler(ABC):
         pass
 
 
+
 class FastaSampler(Sampler):
     """
     Exports population sequences to a FASTA file.
@@ -40,7 +44,7 @@ class FastaSampler(Sampler):
     def __init__(self, interval: int, output_path: str, backtrack_steps: int = 50):
         super().__init__(interval, output_path)
         # DNA mapping
-        self.alphabet = np.array(['A', 'C', 'G', 'T'])
+        self.alphabet = Genome.ALPHABET
         self.backtrack_steps = backtrack_steps
 
         # Ensure the file is empty
@@ -139,6 +143,7 @@ class IdentitySampler(Sampler):
         plt.close()  # Close to free up memory
 
 
+
 class FitnessSampler(Sampler):
     """Tracks Average Fitness (Genetic Health) over time."""
     def __init__(self, interval: int, output_path: str):
@@ -164,6 +169,7 @@ class FitnessSampler(Sampler):
         plt.grid(True, alpha=0.3)
         plt.savefig(self.output_path.with_suffix('.png'))
         plt.close()
+
 
 
 class DiversitySampler(Sampler):
@@ -217,6 +223,7 @@ class DiversitySampler(Sampler):
         plt.close()
 
 
+
 class PairwiseIdentitySampler(Sampler):
     """Calculates Average Pairwise Distance using the Jukes-Cantor (JC69) model."""
 
@@ -264,6 +271,7 @@ class PairwiseIdentitySampler(Sampler):
         plt.grid(True, alpha=0.3)
         plt.savefig(self.output_path.with_suffix('.png'))
         plt.close()
+
 
 
 class HaplotypeFrequencySampler(Sampler):

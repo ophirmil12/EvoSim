@@ -1,6 +1,7 @@
 from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
 from src.servine.io.trees import TreeRecorder
+from src.servine.color import *
 
 
 class SamplerRegistry:
@@ -38,5 +39,5 @@ class SamplerRegistry:
                 else:
                     samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
             else:
-                print(f"Warning: Unknown sampler type '{s_conf['type']}'")
+                print(fg.YELLOW, f"Warning: Unknown sampler type '{s_conf['type']}'", fg.RESET)
         return samplers

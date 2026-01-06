@@ -3,22 +3,28 @@ import numpy as np
 import yaml
 import sys
 
-# Internal imports
+
 from src.servine.simulator import Simulator, Epoch
 from src.servine.genome.sequence import Genome
 from src.servine.population.container import PopulationRegistry
 from src.servine.evolution.mutator import NucleotideMutator
-from src.servine.evolution.fitness import FitnessRegistry
+from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
+from src.servine.color import *
 
 
 
 def main():
     """
     Run with:
-         <.../EvoSim> $env:PYTHONPATH = "src"
-         <.../EvoSim> py -m servine.cli src/config.yaml
+         <.../EvoSim>    $env:PYTHONPATH = "src"
+         <.../EvoSim>    py -m servine.cli src/config.yaml
     in the command line (checked working in Windows PowerShell).
+
+    For cluster (Linux SLURM):
+        export PYTHONPATH="src"
+        python -m servine.cli src/hiv_simulation.yaml
+    See full script example in 'slurm.sh'.
     """
     parser = argparse.ArgumentParser(description="SERVINE: Evolutionary Simulator")
 
@@ -32,7 +38,7 @@ def main():
         with open(args.config, 'r') as f:
             conf = yaml.safe_load(f)
     except Exception as e:
-        print(f"Error: Could not read config file. {e}")
+        print(fg.RED, f"Error: Could not read config file. {e}", fg.RESET)
         sys.exit(1)
 
     # 2. Initialize Core Components
@@ -44,20 +50,20 @@ def main():
         else:
             genome_length = len(seq_string)
         if len(seq_string) != genome_length:
-            print("Error: Initial sequence length does not match genome length.")
+            print(fg.RED, "Error: Initial sequence length does not match genome length.", fg.RESET)
             sys.exit(1)
         mapping = {'A':0, 'C':1, 'G':2, 'T':3}
         try:
             initial_seq = np.array([mapping[base] for base in seq_string], dtype=np.uint8)
         except KeyError as e:
-            print(f"Error: Invalid nucleotide in initial sequence: {e}")
+            print(fg.RED, f"Error: Invalid nucleotide in initial sequence: {e}", fg.RESET)
             sys.exit(1)
         genome = Genome(length=genome_length)
     else:
         if 'genome' in conf and 'length' in conf['genome']:
             genome = Genome(length=conf['genome']['length'])
         else:
-            print("Error: Genome length must be specified if no initial sequence is provided.")
+            print(fg.RED, "Error: Genome length must be specified if no initial sequence is provided.", fg.RESET)
             sys.exit(1)
 
     # Create Population
@@ -89,9 +95,9 @@ def main():
     # 5. Run
     sim = Simulator(population=pop, epochs=epochs, samplers=samplers)
 
-    print(f"--- Starting Simulation: {args.config} ---")
+    print(fg.GREEN, f"--- Starting Simulation: {args.config} ---", fg.RESET)
     sim.run()
-    print("--- Done ---")
+    print(fg.GREEN, "--- Done ---", fg.RESET)
 
 
 if __name__ == "__main__":
