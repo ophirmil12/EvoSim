@@ -1,6 +1,6 @@
 import numpy as np
 from src.servine.genome.sequence import SequenceHandler, Genome
-from src.servine.color import *
+from src.servine.color import fg
 
 
 class Population:

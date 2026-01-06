@@ -1,7 +1,7 @@
 from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
 from src.servine.io.trees import TreeRecorder
-from src.servine.color import *
+from src.servine.color import fg
 
 
 class SamplerRegistry:

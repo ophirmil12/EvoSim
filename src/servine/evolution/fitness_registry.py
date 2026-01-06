@@ -2,6 +2,7 @@ import numpy as np
 
 from src.servine.evolution.fitness import PurifyingFitness, EpistaticFitness, FrequencyDependentFitness, \
     ExposureFitness, CategoricalFitness, NeutralFitness, SiteSpecificPurifyingFitness
+from src.servine.color import fg
 
 
 class FitnessRegistry:
@@ -25,7 +26,7 @@ class FitnessRegistry:
             # Dynamically instantiate the class from the dictionary
             return cls._models[model_name](**params)
 
-        raise ValueError(f"Unknown fitness model: {name}. Available: {list(cls._models.keys())}")
+        raise ValueError(fg.YELLOW, f"Unknown fitness model: {name}. Available: {list(cls._models.keys())}", fg.RESET)
 
     @classmethod
     def fitness_type_and_params(cls, e_conf, initial_seq, epoch_mutator):

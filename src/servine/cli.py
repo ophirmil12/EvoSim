@@ -10,7 +10,7 @@ from src.servine.population.container import PopulationRegistry
 from src.servine.evolution.mutator import NucleotideMutator
 from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
-from src.servine.color import *
+from src.servine.color import fg
 
 
 

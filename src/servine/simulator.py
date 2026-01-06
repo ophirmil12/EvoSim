@@ -4,7 +4,7 @@
 import logging
 
 from src.servine.io.trees import TreeRecorder
-from src.servine.color import *
+from src.servine.color import fg
 
 logger = logging.getLogger(__name__)
 

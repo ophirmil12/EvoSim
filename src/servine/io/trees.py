@@ -7,7 +7,7 @@ import time
 import sys
 
 from src.servine.io.sampler import Sampler
-from src.servine.color import *
+from src.servine.color import fg, bg
 
 
 
