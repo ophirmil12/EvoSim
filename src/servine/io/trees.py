@@ -1,7 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.collections import LineCollection
 import numpy as np
 import time
+import sys
 
 from src.servine.io.sampler import Sampler
 
@@ -72,29 +75,27 @@ class TreeRecorder(Sampler):
             return
 
         # 0. Save CSV
-        start = time.time()
-        print("Writing ancestry CSV...", end=" ", flush=True)
         df = pd.DataFrame(self.ancestry)
         df.to_csv(self.output_path, index=False)
-        print(f"took {time.time() - start:.2f}s")
+
         # 1. Prepare data structures
         start = time.time()
         print("Preparing analysis data (tracing lineages)...", end=" ", flush=True)
         analysis_data = self._prepare_analysis_data(df)
         print(f"took {time.time() - start:.2f}s")
+
         # 2. Generate Newick
         start = time.time()
-        print("Generating Newick tree file...", end=" ", flush=True)
+        print("Generating Newick tree file (this may take a while)...", end=" ", flush=True)
         self._save_newick_tree(analysis_data)
         print(f"took {time.time() - start:.2f}s")
+
         # 3. Generate LTT Plot
-        start = time.time()
-        print("Generating Lineages Through Time (LTT) plot...", end=" ", flush=True)
         self._save_ltt_plot(analysis_data)
-        print(f"took {time.time() - start:.2f}s")
+
         # 4. Generate Tree Plot
         start = time.time()
-        print("Generating topological tree visualization (this may take a while)...", end=" ", flush=True)
+        print("Generating topological tree visualization...", end=" ", flush=True)
         self._save_tree_plot(analysis_data)
         print(f"took {time.time() - start:.2f}s")
 
@@ -140,7 +141,6 @@ class TreeRecorder(Sampler):
 
     def _save_newick_tree(self, data):
         """Constructs and saves the FULL Newick string (including extinct branches)."""
-        import sys
         sys.setrecursionlimit(max(3000, len(data['df'])))
 
         def build_node(node_id):
@@ -197,24 +197,22 @@ class TreeRecorder(Sampler):
 
         # 1. Dynamic Figure Size
         n_leaves = len(df) - len(data['parent_map'])
-        fig_height = max(10, n_leaves * 0.15)
+        fig_height = max(10.0, n_leaves * 0.15)
         fig, ax = plt.subplots(figsize=(16, fig_height))
 
         # 2. Build Adjacency List & Identify Roots
         children_map = {}
         all_recorded_ids = set(df['id'])
-        start_nodes = set()  # Nodes that act as roots for our drawing
+        start_nodes = set()
 
         for _, row in df.iterrows():
             pid = row['parent_id']
             cid = row['id']
 
-            # Build tree structure
             if pid not in children_map:
                 children_map[pid] = []
             children_map[pid].append(cid)
 
-            # If the parent isn't in our recorded IDs, it's a Root of this tree
             if pid not in all_recorded_ids:
                 start_nodes.add(pid)
 
@@ -223,81 +221,102 @@ class TreeRecorder(Sampler):
         active_ids = data['active_ids']
 
         def compute_y_positions(node_id):
-            # Base Case: Leaf (no known children)
+            # Base Case: Leaf
             if node_id not in children_map:
                 y = layout_state['next_y']
                 layout_state['node_y'][node_id] = y
                 layout_state['next_y'] += 1
                 return y
 
-            # Recursive Step: Visit children
+            # Recursive Step
             child_ys = []
             children = children_map[node_id]
 
-            # Sort: Active lineages last (bottom/center) to group them
+            # Sort: Active lineages last so they appear grouped
             sorted_children = sorted(children, key=lambda x: (x in active_ids, x))
 
             for child in sorted_children:
                 child_ys.append(compute_y_positions(child))
 
-            # Parent Y is average of children
             my_y = np.mean(child_ys)
             layout_state['node_y'][node_id] = my_y
             return my_y
 
-        # Run Layout starting from the invisible Gen 0 roots
         for root in sorted(list(start_nodes)):
             compute_y_positions(root)
-            layout_state['next_y'] += 1  # Gap between trees
+            layout_state['next_y'] += 1
 
         node_y = layout_state['node_y']
 
-        # 4. Draw Branches
+        # 4. Draw Branches (Optimized with LineCollection)
         cmap = plt.get_cmap('viridis')
         max_gen = data['last_gen']
         id_to_gen = data['id_to_gen']
+
+        # Lists to store segments for batch processing
+        # Segment format: [(x1, y1), (x2, y2)]
+        inactive_segments = []
+        active_segments = []
+        active_colors = []
 
         for _, row in df.iterrows():
             node_id = row['id']
             parent_id = row['parent_id']
 
-            # Safety: Ensure we have coordinates for both
+            # Safety check
             if parent_id not in node_y or node_id not in node_y:
                 continue
 
-            # X-Coords: Use 0 for the invisible root parents if missing
+            # Coordinates
             px = id_to_gen.get(parent_id, 0)
             cx = row['generation']
-
-            # Y-Coords
             py = node_y[parent_id]
             cy = node_y[node_id]
 
-            x_coords = [px, cx]
-            y_coords = [py, cy]
+            segment = [(px, py), (cx, cy)]
 
-            # Styling
             if node_id in active_ids:
-                color = cmap(row['generation'] / max_gen)
-                alpha = 0.9
-                linewidth = 1.5
-                zorder = 10
+                active_segments.append(segment)
+                # Calculate color immediately for this segment
+                # handle max_gen=0 edge case
+                norm_gen = (row['generation'] / max_gen) if max_gen > 0 else 0
+                active_colors.append(cmap(norm_gen))
             else:
-                color = 'grey'
-                alpha = 0.3
-                linewidth = 0.5
-                zorder = 1
+                inactive_segments.append(segment)
 
-            ax.plot(x_coords, y_coords, color=color, alpha=alpha, linewidth=linewidth, zorder=zorder)
+        # Add Inactive Lines (Batch 1: Bottom Layer)
+        if inactive_segments:
+            lc_inactive = LineCollection(
+                inactive_segments,
+                colors='grey',
+                alpha=0.3,
+                linewidths=0.5,
+                zorder=1
+            )
+            ax.add_collection(lc_inactive)
 
+        # Add Active Lines (Batch 2: Top Layer)
+        if active_segments:
+            lc_active = LineCollection(
+                active_segments,
+                colors=active_colors,
+                alpha=0.9,
+                linewidths=1.5,
+                zorder=10
+            )
+            ax.add_collection(lc_active)
+
+        # Final Plot Settings
         ax.set_title("Evolutionary History: Topological View")
         ax.set_xlabel("Generation")
         ax.set_ylabel("Lineage Space (Sorted)")
         ax.grid(axis='x', linestyle='--', alpha=0.3)
+
+        # Auto-scale axes (add_collection doesn't do this automatically)
+        ax.autoscale_view()
         ax.invert_yaxis()
 
         # Legend
-        from matplotlib.lines import Line2D
         custom_lines = [
             Line2D([0], [0], color=cmap(0.8), lw=2, label='Surviving Lineage'),
             Line2D([0], [0], color='grey', lw=1, label='Extinct Lineage')
@@ -305,5 +324,5 @@ class TreeRecorder(Sampler):
         ax.legend(handles=custom_lines, loc='upper left')
 
         output_file = str(self.output_path).replace(".csv", "") + "_tree.png"
-        plt.savefig(output_file, dpi=600, bbox_inches='tight')
+        plt.savefig(output_file, dpi=1000, bbox_inches='tight')
         plt.close(fig)
