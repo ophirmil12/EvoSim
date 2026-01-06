@@ -69,6 +69,9 @@ class PurifyingFitness(FitnessModel):
 
         # 2. Calculate fitness: w = (1 - s)^n
         # where s is intensity and n is number of mutations
+        # TODO: SANTA-SIM (and others) uses w=e^(-sn), not w=(1-s)^n
+        #  fitness_scores = np.exp(-self.intensity * mutation_counts)
+        #  maybe, or something like that
         fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
 
         # Ensure fitness never hits exactly zero to avoid math errors in selection
@@ -83,6 +86,8 @@ class PurifyingFitness(FitnessModel):
         self.reference_sequence = consensus.flatten()
 
 
+# TODO maybe create a sub-SiteSpecificPurifyingFitness that consider the 3-codon redundancy
+#  (ignore the mutations in third letters in fitness calculations)
 class SiteSpecificPurifyingFitness(FitnessModel):
     """
     By defining an array of "site_intensities", we can control on how a mutation

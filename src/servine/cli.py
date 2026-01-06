@@ -76,6 +76,8 @@ def main():
         epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
 
         # Setup Fitness Model
+        # TODO: we need to add functionality where a user can select multiple fitness models per
+        #  epoch, and the final fitness of an organism is the product of all fitness's models
         fitness_params, fit_type = FitnessRegistry.fitness_type_and_params(e_conf, initial_seq, epoch_mutator)
         fitness = FitnessRegistry.get(
             fit_type,

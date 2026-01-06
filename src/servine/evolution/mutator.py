@@ -87,6 +87,7 @@ class NucleotideMutator(Mutator):
 
         # 2. Handle Transversions (e.g., A -> C or T)
         # For transversions, we pick randomly from the two remaining options
+        # TODO there might be a way to vectorize this for efficiency
         tv_indices = np.where(~is_transition)[0]
         for idx in tv_indices:
             orig = current_nucs[idx]
@@ -95,3 +96,7 @@ class NucleotideMutator(Mutator):
             new_nucs[idx] = np.random.choice(options)
 
         matrix[mutation_mask] = new_nucs
+
+
+# TODO - the main missing functionality is recombination
+#  Use a Poisson distribution to determine the number of breakpoints, then select crossover points uniformly.
