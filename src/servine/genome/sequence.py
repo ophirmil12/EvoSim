@@ -35,14 +35,14 @@ class SequenceHandler:
     """
 
     @staticmethod
-    def create_population_matrix(size: int, length: int, master_sequence=None):
+    def create_population_matrix(pop_size: int, length: int, master_sequence=None):
         """
         Creates a 2D matrix representing the whole population.
         If master_sequence is provided, the whole population starts identical.
         """
         if master_sequence is None:
             # Random starting population
-            return np.random.randint(0, 4, size=(size, length), dtype=np.uint8)
+            return np.random.randint(0, 4, size=(pop_size, length), dtype=np.uint8)
         else:
             # Everyone starts as a clone of the master
-            return np.tile(master_sequence, (size, 1))
+            return np.tile(master_sequence, (pop_size, 1))

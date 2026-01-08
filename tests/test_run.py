@@ -34,7 +34,7 @@ def run_test():
     )
 
     # 5. Setup Sampling
-    sampler = None      # TODO choose some Sampler
+    sampler = None
 
     # 6. Initialize and Run Simulator
     sim = Simulator(

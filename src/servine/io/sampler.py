@@ -1,4 +1,4 @@
-# Exporters for FASTA, NEXUS, and Stats
+# Exporters for FASTA, Statistics, and more - collected during the simulation
 
 
 import numpy as np

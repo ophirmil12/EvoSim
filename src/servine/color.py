@@ -1,4 +1,5 @@
 # Terminal color definitions
+# usage: print(fg.RED, "This is red font!", fg.RESET, "normal font...")
 
 class fg:
     BLACK   = '\033[30m'

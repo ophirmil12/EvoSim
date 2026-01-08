@@ -1,3 +1,5 @@
+# Used for creating new Fitness models from string
+
 import numpy as np
 
 from src.servine.evolution.fitness import PurifyingFitness, EpistaticFitness, FrequencyDependentFitness, \

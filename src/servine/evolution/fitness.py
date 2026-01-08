@@ -1,4 +1,4 @@
-# Fitness landscapes (Purifying, Epistatic)
+# Fitness landscapes (Purifying, Epistatic...)
 
 from abc import ABC, abstractmethod
 import numpy as np
@@ -6,7 +6,7 @@ from scipy import stats
 
 from ..population.container import Population
 
-# TODO: for all the models - compare to the SANTA-SIM git to check that the math is correct
+# TODO: for all the models - compare to the SANTA-SIM git to check that the math is correct(!!!)
 class FitnessModel(ABC):
     """
     The Base Template for all Fitness Landscapes.

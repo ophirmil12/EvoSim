@@ -1,3 +1,5 @@
+# Creates a Sampler from string
+
 from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
 from src.servine.io.trees import TreeRecorder

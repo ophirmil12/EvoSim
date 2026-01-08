@@ -16,6 +16,6 @@ cd /cs/labs/dina/ophirmil12/NirCourse/EvoSim/
 
 export PYTHONPATH="src"
 
-echo "Running CLI..."
+echo "Running CLI SERVINE..."
 python -m servine.cli src/hiv_simulation.yaml
 

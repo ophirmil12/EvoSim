@@ -1,3 +1,5 @@
+# Special kind of Sampler - it collects the phylogenetic data, and constructs the full tree
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D

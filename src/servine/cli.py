@@ -1,3 +1,5 @@
+# The main file - run the simulation from CLI
+
 import argparse
 import numpy as np
 import yaml
@@ -6,12 +8,18 @@ import sys
 
 from src.servine.simulator import Simulator, Epoch
 from src.servine.genome.sequence import Genome
-from src.servine.population.container import PopulationRegistry
+from src.servine.population.population_registry import PopulationRegistry
 from src.servine.evolution.mutator import NucleotideMutator
 from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
 from src.servine.color import fg
 
+
+# TODO-s:
+#  0. Understand the code
+#  1. Complete all TODOs (recombination?)
+#  2. Make some cool examples
+#  3. Finalise README
 
 
 def main():
@@ -77,7 +85,7 @@ def main():
 
         # Setup Fitness Model
         # TODO: we need to add functionality where a user can select multiple fitness models per
-        #  epoch, and the final fitness of an organism is the product of all fitness's models
+        #  epoch, and the final fitness of an organism is the product (*) of all fitness's models
         fitness_params, fit_type = FitnessRegistry.fitness_type_and_params(e_conf, initial_seq, epoch_mutator)
         fitness = FitnessRegistry.get(
             fit_type,

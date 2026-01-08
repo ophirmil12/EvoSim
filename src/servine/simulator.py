@@ -1,4 +1,10 @@
 # Main simulation loop and Epoch management
+# for epoch (time period in simulation) in epochs:
+#   for generation in len(epoch):
+#       Calculate Fitness
+#       Select survivors (Wright-Fisher)
+#       Data Collection for graphs and analysis
+#       Mutate (Variation) the population
 
 
 import logging
