@@ -1,7 +1,7 @@
-# The Evolution Simulator - "Cool Name"
+# The Evolution Simulator - "SERVINE"
 
 ## Overview
-The Evolution Simulator, codenamed **"Cool Name"**, is a sophisticated simulation program designed to model
+The Evolution Simulator, codenamed **"SERVINE"**, is a sophisticated simulation program designed to model
 the processes of evolution in a virtual environment.
 It allows users to create and observe digital genomes, track evolutionary changes over time, and analyze the effects of various environmental factors on species development.
 
