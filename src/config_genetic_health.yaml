@@ -12,7 +12,9 @@ epochs:
   - name: "Phase_1_Host_Adaptation"
     generations: 300
     mutator:
-      rate: 0.001
+      type: "nucleotide"
+      params:
+        rate: 0.001
     fitness:
       type: "purifying"
       params:
@@ -21,7 +23,9 @@ epochs:
   - name: "Phase_2_Vaccine_Escape"
     generations: 400
     mutator:
-      rate: 0.002    # Mutation rate increases under environmental stress
+      type: "nucleotide"
+      params:
+        rate: 0.002    # Mutation rate increases under environmental stress
     fitness:
       type: "exposure"
       params:
@@ -31,6 +35,7 @@ epochs:
   - name: "Phase_3_Immune_Memory"
     generations: 300
     mutator:
+      type: "nucleotide"
       rate: 0.001
     fitness:
       type: "frequency"

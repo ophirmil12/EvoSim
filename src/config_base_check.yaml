@@ -15,7 +15,9 @@ epochs:
   - name: "Baseline_Evolution"
     generations: 50  # Run for 500 generations
     mutator:
-      rate: 0.01    # Probability of mutation per site per replication
+      type: "nucleotide"
+      params:
+        rate: 0.01    # Probability of mutation per site per replication
     fitness:
       type: "purifying"
       params:
