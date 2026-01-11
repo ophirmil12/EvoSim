@@ -9,7 +9,7 @@ import sys
 from src.servine.simulator import Simulator, Epoch
 from src.servine.genome.sequence import Genome
 from src.servine.population.population_registry import PopulationRegistry
-from src.servine.evolution.mutator import NucleotideMutator
+from src.servine.evolution.mutator_registry import MutatorRegistry
 from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
 from src.servine.color import fg
@@ -17,7 +17,7 @@ from src.servine.color import fg
 
 # TODO-s:
 #  0. Understand the code
-#  1. Complete all TODOs (recombination?)
+#  1. Complete all TODOs
 #  2. Make some cool examples
 #  3. Finalise README.md
 #  4. More ideas can be found in the readme file
@@ -84,7 +84,11 @@ def main():
     epochs = []
     for e_conf in conf['epochs']:
         # Initialize Mutator
-        epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
+        mutator_params = MutatorRegistry.mutator_params(e_conf)
+        epoch_mutator = MutatorRegistry.get(
+            e_conf['mutator']['type'],
+            **mutator_params
+        )
 
         # Setup Fitness Model
         # TODO: we need to add functionality where a user can select multiple fitness models per

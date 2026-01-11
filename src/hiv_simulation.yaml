@@ -30,6 +30,7 @@ epochs:
   - name: "1_Acute_Infection"
     generations: 200
     mutator:
+      type: "nucleotide"
       rate: 0.0001          # High viral mutation rate (approx 1e-4)
       transition_bias: 2.0  # k=2.0 (Biological signature: Transitions > Transversions)
     fitness:
