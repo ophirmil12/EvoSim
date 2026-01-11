@@ -20,7 +20,8 @@ epochs:
     generations: 500  # Run for 500 generations
     mutator:
       type: "nucleotide"
-      rate: 0.05    # Probability of mutation per site per replication
+      params:
+        rate: 0.05    # Probability of mutation per site per replication
     fitness:
       type: "purifying"
       params:
@@ -29,7 +30,8 @@ epochs:
     generations: 500
     mutator:
       type: "nucleotide"
-      rate: 0.002
+      params:
+        rate: 0.002
     fitness:
       type: "purifying"
       params:
@@ -38,7 +40,8 @@ epochs:
     generations: 500
     mutator:
       type: "nucleotide"
-      rate: 0.001
+      params:
+        rate: 0.001
     fitness:
       type: "epistatic"
       params:

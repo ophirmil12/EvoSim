@@ -13,7 +13,8 @@ epochs:
     generations: 300
     mutator:
       type: "nucleotide"
-      rate: 0.001
+      params:
+        rate: 0.001
     fitness:
       type: "purifying"
       params:
@@ -23,7 +24,8 @@ epochs:
     generations: 400
     mutator:
       type: "nucleotide"
-      rate: 0.002    # Mutation rate increases under environmental stress
+      params:
+        rate: 0.002    # Mutation rate increases under environmental stress
     fitness:
       type: "exposure"
       params:
