@@ -16,13 +16,9 @@ from src.servine.color import fg
 
 
 # TODO-s:
-#  0. Understand the code
 #  1. Complete all TODOs
-#  2. Make some cool examples
+#  2. Make some cool examples (Corona)
 #  3. Finalise README.md
-#  4. More ideas can be found in the readme file
-#  5. create explanation on how to create good yaml config file,
-#       and all possible options
 
 
 def main():
