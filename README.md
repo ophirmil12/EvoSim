@@ -1,7 +1,7 @@
 # The Evolution Simulator - "SERVINE"
 
 ## Overview
-The Evolution Simulator, codenamed **"SERVINE"**, is a sophisticated simulation program designed to model
+The Evolution Simulator, **"SERVINE"**, is a sophisticated simulation program designed to model
 the processes of evolution in a virtual environment.
 It allows users to create and observe digital genomes, track evolutionary changes over time, and analyze the effects of various environmental factors on species development.
 
@@ -73,13 +73,3 @@ All outputs are saved in the directory specified in the configuration file.
 
 ### ./tests/
 - test_diversity_plot.py
-
-
-
-
-## Future Plans
-- More **mutations models** - JC69 for example
-- Option for simulation to **start from a single organism**
-- More detailed environmental factors affecting evolution
-- Visualization tools for better analysis of evolutionary trends (+ explanatory **trees**)
-- Changing the codebase to match **different lengths of genomes**
