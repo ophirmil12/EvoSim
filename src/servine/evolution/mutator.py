@@ -103,14 +103,14 @@ class NucleotideMutator(Mutator):
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-class HotAndColdSpotsMutator(Mutator):
-    def __init__(self, rate: float, high_var_kmers: list, k_high: float,
-                 preserved_kmers: list, k_low: float, threshold: float = 0.8,
+class HotColdMutator(Mutator):
+    def __init__(self, rate: float, variable_kmers: list, k_high: float,
+                 conserved_kmers: list, k_low: float, threshold: float = 0.8,
                  transition_bias: float = 2.0):
         super().__init__(rate)
-        self.high_var_kmers = [np.array(km, dtype=np.uint8) for km in high_var_kmers]
+        self.high_var_kmers = [np.array(km, dtype=np.uint8) for km in variable_kmers]
         self.k_high = k_high
-        self.preserved_kmers = [np.array(km, dtype=np.uint8) for km in preserved_kmers]
+        self.preserved_kmers = [np.array(km, dtype=np.uint8) for km in conserved_kmers]
         self.k_low = k_low
         self.threshold = threshold
         self.transition_bias = transition_bias
@@ -120,8 +120,11 @@ class HotAndColdSpotsMutator(Mutator):
         pop_size, genome_len = matrix.shape
         mask = np.ones((pop_size, genome_len), dtype=np.float32)
 
+        # print(f"first sequence {matrix[0]}")
+
         def find_kmers(kmers, factor):
             for kmer in kmers:
+                # print(f"Searching for kmer: {kmer}")
                 k_len = len(kmer)
                 min_matches = int(np.ceil(self.threshold * k_len))
 
@@ -143,6 +146,7 @@ class HotAndColdSpotsMutator(Mutator):
         find_kmers(self.high_var_kmers, self.k_high)
         find_kmers(self.preserved_kmers, self.k_low)
 
+        # print(f"mask after factor: {mask}")
         return mask
 
     def apply(self, population):
