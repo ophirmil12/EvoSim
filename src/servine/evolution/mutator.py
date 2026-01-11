@@ -53,6 +53,7 @@ class NucleotideMutator(Mutator):
     Simple mutator that gets a rate of mutation, and a bias for
     transitions/transversions (transversions are rarer).
     """
+
     def __init__(self, rate: float, transition_bias: float = 2.0):
         super().__init__(rate)
         self.transition_bias = transition_bias
@@ -89,13 +90,12 @@ class NucleotideMutator(Mutator):
 
         # 2. Handle Transversions (e.g., A -> C or T)
         # For transversions, we pick randomly from the two remaining options
-        # TODO there might be a way to vectorize this for efficiency
-        tv_indices = np.where(~is_transition)[0]
-        for idx in tv_indices:
-            orig = current_nucs[idx]
-            # Pick from nucleotides that are NOT the original and NOT the transition
-            options = [n for n in range(4) if n != orig and n != ts_lookup[orig]]
-            new_nucs[idx] = np.random.choice(options)
+
+        tv_mask = ~is_transition
+        num_tvs = np.count_nonzero(tv_mask)
+        if num_tvs > 0:
+            tv_offsets = np.random.choice([1, 3], size=num_tvs)
+            new_nucs[tv_mask] = (current_nucs[tv_mask] + tv_offsets) % 4
 
         matrix[mutation_mask] = new_nucs
 
