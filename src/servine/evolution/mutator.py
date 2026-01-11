@@ -100,5 +100,74 @@ class NucleotideMutator(Mutator):
         matrix[mutation_mask] = new_nucs
 
 
-# TODO - the main missing functionality is recombination
-#  Use a Poisson distribution to determine the number of breakpoints, then select crossover points uniformly.
+from numpy.lib.stride_tricks import sliding_window_view
+
+
+class HotAndColdSpotsMutator(Mutator):
+    def __init__(self, rate: float, high_var_kmers: list, k_high: float,
+                 preserved_kmers: list, k_low: float, threshold: float = 0.8,
+                 transition_bias: float = 2.0):
+        super().__init__(rate)
+        self.high_var_kmers = [np.array(km, dtype=np.uint8) for km in high_var_kmers]
+        self.k_high = k_high
+        self.preserved_kmers = [np.array(km, dtype=np.uint8) for km in preserved_kmers]
+        self.k_low = k_low
+        self.threshold = threshold
+        self.transition_bias = transition_bias
+        self.ts_lookup = np.array([2, 3, 0, 1], dtype=np.uint8)
+
+    def _get_rate_mask(self, matrix):
+        pop_size, genome_len = matrix.shape
+        mask = np.ones((pop_size, genome_len), dtype=np.float32)
+
+        def find_kmers(kmers, factor):
+            for kmer in kmers:
+                k_len = len(kmer)
+                min_matches = int(np.ceil(self.threshold * k_len))
+
+                # Create a sliding window view: shape (pop_size, num_windows, k_len)
+                windows = sliding_window_view(matrix, window_shape=k_len, axis=1)
+
+                # Compare all windows to the kmer at once
+                # matches shape: (pop_size, num_windows)
+                matches = np.sum(windows == kmer, axis=2) >= min_matches
+
+                # Find indices where matches occur
+                rows, start_cols = np.where(matches)
+
+                # Apply the factor to the mask for the entire span of the kmer
+                for offset in range(k_len):
+                    mask[rows, start_cols + offset] = factor
+
+        # Apply variability first, then preservation (priority)
+        find_kmers(self.high_var_kmers, self.k_high)
+        find_kmers(self.preserved_kmers, self.k_low)
+
+        return mask
+
+    def apply(self, population):
+        matrix = population.get_matrix()
+
+        # Vectorized Rate Calculation
+        rate_matrix = self._get_rate_mask(matrix) * self.rate
+
+        # Standard Mutation Logic
+        mutation_mask = np.random.random(matrix.shape) < rate_matrix
+        num_mutations = np.count_nonzero(mutation_mask)
+        if num_mutations == 0: return
+
+        current_nucs = matrix[mutation_mask]
+        prob_ts = self.transition_bias / (self.transition_bias + 2.0)
+        is_transition = np.random.random(num_mutations) < prob_ts
+
+        new_nucs = np.zeros(num_mutations, dtype=np.uint8)
+        new_nucs[is_transition] = self.ts_lookup[current_nucs[is_transition]]
+
+        tv_indices = np.where(~is_transition)[0]
+        if len(tv_indices) > 0:
+            # Vectorized transversion choice helper
+            tv_options = np.array([[1, 3], [0, 2], [1, 3], [0, 2]])  # Options for nucs 0,1,2,3
+            choices = np.random.randint(0, 2, size=len(tv_indices))
+            new_nucs[tv_indices] = tv_options[current_nucs[tv_indices], choices]
+
+        matrix[mutation_mask] = new_nucs
