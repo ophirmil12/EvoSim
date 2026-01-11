@@ -58,6 +58,7 @@ All outputs are saved in the directory specified in the configuration file.
     - FitnessSampler(Sampler): Tracks Average Fitness (Genetic Health) over time.
     - DiversitySampler(Sampler): Tracks Population Diversity (Unique Genotypes) over time.
     - HaplotypeFrequencySampler(Sampler): Tracks the frequency of the most common genotypes (Haplotypes).
+    - InitialAlleleFrequencySampler(Sampler): Tracks the frequency of the initial genotypes.
   - trees.py
     - TreeRecorder(Sampler): A type of Sampler that Tracks the ancestry of every individual to reconstruct evolutionary history.
 
