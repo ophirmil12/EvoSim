@@ -31,7 +31,8 @@ epochs:
     generations: 200
     mutator:
       type: "nucleotide"
-      rate: 0.0001          # High viral mutation rate (approx 1e-4)
+      params:
+        rate: 0.0001          # High viral mutation rate (approx 1e-4)
       transition_bias: 2.0  # k=2.0 (Biological signature: Transitions > Transversions)
     fitness:
       type: "purifying"
@@ -47,8 +48,9 @@ epochs:
   - name: "2_Chronic_Immune_Pressure"
     generations: 600
     mutator:
-      rate: 0.0001
-      transition_bias: 2.0
+      params:
+        rate: 0.0001
+        transition_bias: 2.0
     fitness:
       type: "frequency"     # The "Red Queen" model
       params:
@@ -63,7 +65,8 @@ epochs:
   - name: "3_Antiviral_Therapy"
     generations: 300
     mutator:
-      rate: 0.0002          # Stress-induced hypermutation (optional theoretical boost)
+      params:
+        rate: 0.0002          # Stress-induced hypermutation (optional theoretical boost)
       transition_bias: 2.0
     fitness:
       type: "exposure"
@@ -97,3 +100,7 @@ sampling:
   - type: "tree"
     interval: 1
     file: "output/hiv_simulation/hiv_ancestry.csv"
+
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"
