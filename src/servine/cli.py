@@ -84,6 +84,7 @@ def main():
     epochs = []
     for e_conf in conf['epochs']:
         # Initialize Mutator
+        # TODO add a Mutator registry
         epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
 
         # Setup Fitness Model
