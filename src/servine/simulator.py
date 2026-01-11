@@ -44,6 +44,8 @@ class Simulator:
         # Start with the founding IDs (0, 1, 2... N-1)
         self.current_individual_ids = list(range(len(self.population.get_matrix())))
 
+        self.collect_data()
+
         for epoch in self.epochs:
             print(fg.BLUE, f"Running Epoch: {epoch.name}...", fg.RESET)
             for g in range(epoch.generations):

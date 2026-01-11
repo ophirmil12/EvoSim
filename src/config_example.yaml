@@ -23,7 +23,7 @@ epochs:
     fitness:
       type: "purifying"
       params:
-        intensity: 0.05   # Higher = stronger selection against mutations
+        intensity: 0.5   # Higher = stronger selection against mutations
   - name: "Converged_Evolution"
     generations: 500
     mutator:
@@ -58,6 +58,9 @@ sampling:
   - type: "identity"
     interval: 10
     file: "output/identity.csv"
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"
 
 #  - type: "tree"
 #    interval: 10
