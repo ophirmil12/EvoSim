@@ -37,3 +37,6 @@ sampling:
   - type: "fitness"
     interval: 10
     file: "output/low_selection/fitness.csv"
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"

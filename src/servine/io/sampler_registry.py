@@ -1,7 +1,8 @@
 # Creates a Sampler from string
 
 from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
-                                    DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler)
+                                    DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler,
+                                    InitialAlleleFrequencySampler)
 from src.servine.io.trees import TreeRecorder
 from src.servine.color import fg
 
@@ -15,7 +16,8 @@ class SamplerRegistry:
         'diversity': DiversitySampler,
         'tree': TreeRecorder,  # Note: computationally intensive - creates a large tree sometimes
         'pairwise': PairwiseIdentitySampler,
-        'haplotype': HaplotypeFrequencySampler
+        'haplotype': HaplotypeFrequencySampler,
+        'initial_alleles': InitialAlleleFrequencySampler
     }
 
     @classmethod
