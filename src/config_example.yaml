@@ -19,6 +19,7 @@ epochs:
   - name: "Baseline_Evolution"
     generations: 500  # Run for 500 generations
     mutator:
+      type: "nucleotide"
       rate: 0.05    # Probability of mutation per site per replication
     fitness:
       type: "purifying"
@@ -27,6 +28,7 @@ epochs:
   - name: "Converged_Evolution"
     generations: 500
     mutator:
+      type: "nucleotide"
       rate: 0.002
     fitness:
       type: "purifying"
@@ -35,6 +37,7 @@ epochs:
   - name: "Interaction_Test"
     generations: 500
     mutator:
+      type: "nucleotide"
       rate: 0.001
     fitness:
       type: "epistatic"
