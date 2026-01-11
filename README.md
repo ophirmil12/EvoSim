@@ -79,7 +79,6 @@ All outputs are saved in the directory specified in the configuration file.
 ## Future Plans
 - More **mutations models** - JC69 for example
 - Option for simulation to **start from a single organism**
-- **Recombination** models, Insertion and Deletion mutations (need to change genome lengths first)
 - More detailed environmental factors affecting evolution
 - Visualization tools for better analysis of evolutionary trends (+ explanatory **trees**)
 - Changing the codebase to match **different lengths of genomes**

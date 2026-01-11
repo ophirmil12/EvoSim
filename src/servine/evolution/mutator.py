@@ -98,6 +98,3 @@ class NucleotideMutator(Mutator):
             new_nucs[tv_mask] = (current_nucs[tv_mask] + tv_offsets) % 4
 
         matrix[mutation_mask] = new_nucs
-
-# TODO - the main missing functionality is recombination
-#  Use a Poisson distribution to determine the number of breakpoints, then select crossover points uniformly.
