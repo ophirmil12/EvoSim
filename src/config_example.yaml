@@ -1,57 +1,36 @@
 # 1. Genome: Define the physical sequence properties
 genome:
-  length: 5        # Number of nucleotides, need to match initial_sequence length, if provided
+  length: 50        # Number of nucleotides, need to match initial_sequence length, if provided
 
 # 2. Population: Define how many individuals start the simulation
 population:
-  initial_size: 50  # Number of sequences in the first generation
+  initial_size: 100  # Number of sequences in the first generation
   # OPTIONAL: Provide a starting sequence.
   # If commented out or removed, it will be random.
   # initial_sequence: "AAAAA"
   # Or, choose multiple sequences
-  initial_distribution:
-    "AAAAA": 25
-    "TTTTT": 25
+  initial_sequence: "AAAATTTTTAAAATTTTGGGGGGGGCCCCCCCATCTAGCTAGCTATGCTA"
 
 # 3. Epochs: Define the evolutionary "stages"
 # You can add multiple epochs to simulate changing environments
 epochs:
   - name: "Baseline_Evolution"
-    generations: 500  # Run for 500 generations
+    generations: 1000  # Run for 1000 generations
     mutator:
-      type: "nucleotide"
+      type: "hotcold"
       params:
-        rate: 0.05    # Probability of mutation per site per replication
+        rate: 0.01
+        variable_kmers: [ "AAA", "TTT"]
+        k_high: 1
+        conserved_kmers: [ "GGG", "CCC"]
+        k_low: 0.01
+        threshold: 0.8
+        transition_bias: 2.0
     fitness:
       type: "purifying"
       params:
-        intensity: 0.5   # Higher = stronger selection against mutations
-  - name: "Converged_Evolution"
-    generations: 500
-    mutator:
-      type: "nucleotide"
-      params:
-        rate: 0.002
-    fitness:
-      type: "purifying"
-      params:
-        intensity: 0.1
-  - name: "Interaction_Test"
-    generations: 500
-    mutator:
-      type: "nucleotide"
-      params:
-        rate: 0.001
-    fitness:
-      type: "epistatic"
-      params:
-        # A 5x5 matrix if your genome length is 5
-        interaction_matrix:
-          - [0.0, 0.1, 0.0, 0.0, 0.0]
-          - [0.1, 0.0, 0.0, 0.0, 0.0]
-          - [0.0, 0.0, 0.0, 0.0, 0.0]
-          - [0.0, 0.0, 0.0, 0.0, 0.0]
-          - [0.0, 0.0, 0.0, 0.0, 0.0]
+        intensity: 0.05   # Higher = stronger selection against mutations
+
 
 # 4. Sampling: Define what data to save and how often
 sampling:
@@ -67,6 +46,7 @@ sampling:
   - type: "initial_alleles"
     interval: 5
     file: "output/initial_freqs.csv"
+
 
 #  - type: "tree"
 #    interval: 10
