@@ -12,7 +12,9 @@ epochs:
   - name: "Drift_and_Diversification"
     generations: 500
     mutator:
-      rate: 0.05    # High mutation rate to push individuals away from each other
+      type: "nucleotide"
+      params:
+        rate: 0.05    # High mutation rate to push individuals away from each other
     fitness:
       type: "purifying"
       params:
@@ -37,3 +39,6 @@ sampling:
   - type: "fitness"
     interval: 10
     file: "output/low_selection/fitness.csv"
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"

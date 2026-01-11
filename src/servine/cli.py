@@ -7,7 +7,7 @@ import os
 from src.servine.simulator import Simulator, Epoch
 from src.servine.genome.sequence import Genome
 from src.servine.population.population_registry import PopulationRegistry
-from src.servine.evolution.mutator import NucleotideMutator
+from src.servine.evolution.mutator_registry import MutatorRegistry
 from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
 from src.servine.color import fg
@@ -55,7 +55,11 @@ def run_simulation_from_config(conf):
     epochs = []
     for e_conf in conf['epochs']:
         # Initialize Mutator
-        epoch_mutator = NucleotideMutator(rate=float(e_conf['mutator']['rate']))
+        mutator_params = MutatorRegistry.mutator_params(e_conf)
+        epoch_mutator = MutatorRegistry.get(
+            e_conf['mutator']['type'],
+            **mutator_params
+        )
 
         # Setup Fitness Model
         fitness_params, fit_type = FitnessRegistry.fitness_type_and_params(e_conf, initial_seq, epoch_mutator)

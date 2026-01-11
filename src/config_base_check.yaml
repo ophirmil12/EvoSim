@@ -15,7 +15,9 @@ epochs:
   - name: "Baseline_Evolution"
     generations: 50  # Run for 500 generations
     mutator:
-      rate: 0.01    # Probability of mutation per site per replication
+      type: "nucleotide"
+      params:
+        rate: 0.01    # Probability of mutation per site per replication
     fitness:
       type: "purifying"
       params:
@@ -34,3 +36,7 @@ sampling:
   - type: "tree"
     interval: 1
     file: "output/ancestry.csv"
+
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"

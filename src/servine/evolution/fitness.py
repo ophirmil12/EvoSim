@@ -69,10 +69,9 @@ class PurifyingFitness(FitnessModel):
 
         # 2. Calculate fitness: w = (1 - s)^n
         # where s is intensity and n is number of mutations
-        # TODO: SANTA-SIM (and others) uses w=e^(-sn), not w=(1-s)^n
-        #  fitness_scores = np.exp(-self.intensity * mutation_counts)
-        #  maybe, or something like that
-        fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
+
+        # fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
+        fitness_scores = np.exp(-self.intensity*mutation_counts)
 
         # Ensure fitness never hits exactly zero to avoid math errors in selection
         return np.maximum(fitness_scores, 1e-10)
@@ -81,9 +80,11 @@ class PurifyingFitness(FitnessModel):
         """Sets the reference to the most common nucleotide at each site."""
         matrix = population.get_matrix()
         # Find the mode (most frequent value) for each column
+        self.reference_sequence = np.array([np.bincount(matrix[:, col], minlength=4).argmax() for col in range(matrix.shape[1])])
+
         # axis=0 means operate on columns
-        consensus, _ = stats.mode(matrix, axis=0)
-        self.reference_sequence = consensus.flatten()
+        # consensus, _ = stats.mode(matrix, axis=0)
+        # self.reference_sequence = consensus.flatten()
 
 
 # TODO maybe create a sub-SiteSpecificPurifyingFitness that consider the 3-codon redundancy

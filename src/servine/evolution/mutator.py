@@ -53,6 +53,7 @@ class NucleotideMutator(Mutator):
     Simple mutator that gets a rate of mutation, and a bias for
     transitions/transversions (transversions are rarer).
     """
+
     def __init__(self, rate: float, transition_bias: float = 2.0):
         super().__init__(rate)
         self.transition_bias = transition_bias
@@ -89,16 +90,88 @@ class NucleotideMutator(Mutator):
 
         # 2. Handle Transversions (e.g., A -> C or T)
         # For transversions, we pick randomly from the two remaining options
-        # TODO there might be a way to vectorize this for efficiency
-        tv_indices = np.where(~is_transition)[0]
-        for idx in tv_indices:
-            orig = current_nucs[idx]
-            # Pick from nucleotides that are NOT the original and NOT the transition
-            options = [n for n in range(4) if n != orig and n != ts_lookup[orig]]
-            new_nucs[idx] = np.random.choice(options)
+
+        tv_mask = ~is_transition
+        num_tvs = np.count_nonzero(tv_mask)
+        if num_tvs > 0:
+            tv_offsets = np.random.choice([1, 3], size=num_tvs)
+            new_nucs[tv_mask] = (current_nucs[tv_mask] + tv_offsets) % 4
 
         matrix[mutation_mask] = new_nucs
 
 
-# TODO - the main missing functionality is recombination
-#  Use a Poisson distribution to determine the number of breakpoints, then select crossover points uniformly.
+from numpy.lib.stride_tricks import sliding_window_view
+
+
+class HotColdMutator(Mutator):
+    def __init__(self, rate: float, variable_kmers: list, k_high: float,
+                 conserved_kmers: list, k_low: float, threshold: float = 0.8,
+                 transition_bias: float = 2.0):
+        super().__init__(rate)
+        self.high_var_kmers = [np.array(km, dtype=np.uint8) for km in variable_kmers]
+        self.k_high = k_high
+        self.preserved_kmers = [np.array(km, dtype=np.uint8) for km in conserved_kmers]
+        self.k_low = k_low
+        self.threshold = threshold
+        self.transition_bias = transition_bias
+        self.ts_lookup = np.array([2, 3, 0, 1], dtype=np.uint8)
+
+    def _get_rate_mask(self, matrix):
+        pop_size, genome_len = matrix.shape
+        mask = np.ones((pop_size, genome_len), dtype=np.float32)
+
+        # print(f"first sequence {matrix[0]}")
+
+        def find_kmers(kmers, factor):
+            for kmer in kmers:
+                # print(f"Searching for kmer: {kmer}")
+                k_len = len(kmer)
+                min_matches = int(np.ceil(self.threshold * k_len))
+
+                # Create a sliding window view: shape (pop_size, num_windows, k_len)
+                windows = sliding_window_view(matrix, window_shape=k_len, axis=1)
+
+                # Compare all windows to the kmer at once
+                # matches shape: (pop_size, num_windows)
+                matches = np.sum(windows == kmer, axis=2) >= min_matches
+
+                # Find indices where matches occur
+                rows, start_cols = np.where(matches)
+
+                # Apply the factor to the mask for the entire span of the kmer
+                for offset in range(k_len):
+                    mask[rows, start_cols + offset] = factor
+
+        # Apply variability first, then preservation (priority)
+        find_kmers(self.high_var_kmers, self.k_high)
+        find_kmers(self.preserved_kmers, self.k_low)
+
+        # print(f"mask after factor: {mask}")
+        return mask
+
+    def apply(self, population):
+        matrix = population.get_matrix()
+
+        # Vectorized Rate Calculation
+        rate_matrix = self._get_rate_mask(matrix) * self.rate
+
+        # Standard Mutation Logic
+        mutation_mask = np.random.random(matrix.shape) < rate_matrix
+        num_mutations = np.count_nonzero(mutation_mask)
+        if num_mutations == 0: return
+
+        current_nucs = matrix[mutation_mask]
+        prob_ts = self.transition_bias / (self.transition_bias + 2.0)
+        is_transition = np.random.random(num_mutations) < prob_ts
+
+        new_nucs = np.zeros(num_mutations, dtype=np.uint8)
+        new_nucs[is_transition] = self.ts_lookup[current_nucs[is_transition]]
+
+        tv_indices = np.where(~is_transition)[0]
+        if len(tv_indices) > 0:
+            # Vectorized transversion choice helper
+            tv_options = np.array([[1, 3], [0, 2], [1, 3], [0, 2]])  # Options for nucs 0,1,2,3
+            choices = np.random.randint(0, 2, size=len(tv_indices))
+            new_nucs[tv_indices] = tv_options[current_nucs[tv_indices], choices]
+
+        matrix[mutation_mask] = new_nucs
