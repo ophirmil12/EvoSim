@@ -47,11 +47,11 @@ class NeutralFitness(FitnessModel):
 # TODO: the purifying models need some testing and refinement
 class PurifyingFitness(FitnessModel):
     """Fitness model where mutations reduce fitness exponentially."""
-    def __init__(self, intensity: float = 0.1, reference_sequence=None):
+    def __init__(self, intensity: float = 0.1, reference_sequence=None, **kwargs):
         """
         :param intensity: How much each mutation hurts fitness (Selection Coefficient).
         """
-        super().__init__(reference_sequence)
+        super().__init__(reference_sequence, **kwargs)
         self.intensity = intensity
 
     def evaluate_population(self, population: Population) -> np.ndarray:
@@ -187,8 +187,8 @@ class ExposureFitness(PurifyingFitness):
         self.update_interval = update_interval
         self.mutator = mutator          # Uses a mutator to "drift" the peak
 
-    def update_peak(self, generation: int):
-        if generation % self.update_interval == 0:
+    def update(self, generation: int):
+        if generation>0 and generation % self.update_interval == 0:
             # Shift the reference sequence slightly
             # Effectively "moving the goalposts" for the population
             tmp_pop = Population(self.reference_sequence.reshape(1, -1))

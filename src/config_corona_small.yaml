@@ -1,0 +1,69 @@
+
+population:
+  initial_size: 300
+  initial_distribution:
+    # Wuhan-like segment (Ref)
+    "TTCGAGGTTTACATAGACAGAGTAAGGGTTAAAACTACTACTACTACTACTACTACTACT": 100
+    # Delta-like (L452R, T478K equivalents)
+    "TTCGAGGTTTACATCGACAGAGTAAGGGTTAAAGCTACTACTACTACTACTACTACTACT": 100
+    # Omicron-like (N501Y, K417N equivalents)
+    "TTCGCGGTTTACATAGACAGGGTAAGGGTTAAAACTACTACTACTACTACTGCTACTACT": 100
+
+genome:
+  length: 60
+
+epochs:
+  - name: "Phase 1: Initial Spread"
+    generations: 100
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.0005
+        transition_bias: 2.5
+    fitness:
+      type: "purifying"
+      params:
+        intensity: 0.1
+
+  - name: "Phase 2: Vaccine Rollout (Shifting Peak)"
+    generations: 100
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.0005
+        transition_bias: 2.5
+    fitness:
+      type: "exposure"
+      params:
+        intensity: 0.15
+        update_interval: 20
+        mutator_type: "nucleotide"
+        mutator_params: {rate: 0.01, transition_bias: 2.5}
+
+  - name: "Phase 3: Chronic Immune Escape"
+    generations: 100
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.0008
+        transition_bias: 2.5
+    fitness:
+      type: "frequency"
+      params:
+        pressure: 1.5
+
+sampling:
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/corona_initial.csv"
+  - type: "haplotype"
+    interval: 10
+    file: "output/corona_sweeps.csv"
+  - type: "fitness"
+    interval: 5
+    file: "output/corona_health.csv"
+#  - type: "tree"
+#    interval: 25
+#    file: "output/corona_tree.csv"
+
+
