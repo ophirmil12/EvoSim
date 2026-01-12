@@ -12,9 +12,11 @@ To run the Evolution Simulator, follow these steps:
 2. In the terminal, navigate to the project directory
 3. $env:PYTHONPATH = "src"
 4. py -m servine.cli config.yaml
+
+
 To run the graphical interface:
-5. pip install streamlit pyyaml 
-6. streamlit run UI.py
+1. py -m pip install streamlit
+2. py -m streamlit run UI.py
 
 To customize the simulation parameters, edit the `config.yaml` file before running the simulator.
 All outputs are saved in the directory specified in the configuration file.

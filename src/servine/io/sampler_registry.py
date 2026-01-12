@@ -38,10 +38,13 @@ class SamplerRegistry:
                     samplers.append(sampler_class(
                         s_conf['interval'],
                         s_conf['file'],
-                        s_conf['interval']  # backtrack_steps = interval, for fasta
+                        s_conf['interval'],  # backtrack_steps = interval, for fasta
+                        **params
                     ))
                 else:
-                    samplers.append(sampler_class(s_conf['interval'], s_conf['file']))
+                    samplers.append(sampler_class(s_conf['interval'],
+                                                  s_conf['file'],
+                                                  **params))
             else:
                 print(fg.YELLOW, f"Warning: Unknown sampler type '{s_conf['type']}'", fg.RESET)
         return samplers

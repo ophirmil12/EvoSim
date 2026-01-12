@@ -3,6 +3,8 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
+from numpy.lib.stride_tricks import sliding_window_view
+
 
 class Mutator(ABC):
     """
@@ -98,9 +100,6 @@ class NucleotideMutator(Mutator):
             new_nucs[tv_mask] = (current_nucs[tv_mask] + tv_offsets) % 4
 
         matrix[mutation_mask] = new_nucs
-
-
-from numpy.lib.stride_tricks import sliding_window_view
 
 
 class HotColdMutator(Mutator):
