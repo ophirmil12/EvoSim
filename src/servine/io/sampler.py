@@ -364,3 +364,117 @@ class InitialAlleleFrequencySampler(Sampler):
         # Save the plot
         plt.savefig(self.output_path.with_suffix('.png'))
         plt.close()
+
+
+class MutationDensitySampler(Sampler):
+    """
+    Tracks and visualizes the distribution of mutations across the genome.
+    """
+
+    def __init__(self, interval: int, output_path: str):
+        super().__init__(interval, output_path)
+        self.cumulative_mutations = None
+        self.previous_matrix = None
+
+    def sample(self, population, generation: int, **kwargs):
+        matrix = population.get_matrix()
+
+        if self.previous_matrix is None:
+            self.previous_matrix = matrix.copy()
+            self.cumulative_mutations = np.zeros(matrix.shape[1], dtype=np.int32)
+
+        # Count sites that changed since the last sample
+        # Summing across the population to get site-specific counts
+        mutations = np.sum(matrix != self.previous_matrix, axis=0)
+        self.cumulative_mutations += mutations
+        self.previous_matrix = matrix.copy()
+        # Save data to CSV
+        df = pd.DataFrame({
+            "position": np.arange(len(self.cumulative_mutations)),
+            "count": self.cumulative_mutations
+        })
+        df.to_csv(self.output_path, index=False)
+
+    def finalize(self):
+        if self.cumulative_mutations is None:
+            return
+        df = pd.read_csv(self.output_path)
+        # Apply a rolling mean to make the 30kb genome readable
+        df["smoothed"] = df["count"].rolling(window=100, center=True).mean()
+
+        plt.figure(figsize=(15, 6))
+        plt.fill_between(df["position"], df["smoothed"], color="orange", alpha=0.4)
+        plt.plot(df["position"], df["smoothed"], color="red", linewidth=1, label="Smoothed Mutation Density")
+        plt.title("Genomic Mutation Landscape (Hotspots vs Coldspots)")
+        plt.xlabel("Genomic Position (bp)")
+        plt.ylabel("Observed Mutations (Cumulative)")
+        plt.legend()
+        plt.grid(alpha=0.3)
+
+        plt.savefig(self.output_path.with_suffix('.png'), dpi=300)
+        plt.close()
+
+
+class ZebraHaplotypeSampler(Sampler):
+    """
+    Plots the top 10 haplotypes using two alternating colors
+    to show the population fragmentation.
+    """
+
+    def sample(self, population, generation: int, **kwargs):
+        matrix = population.get_matrix()
+        # Find unique genotypes and their counts
+        _, counts = np.unique(matrix, axis=0, return_counts=True)
+
+        # Sort by frequency and take top 10
+        sorted_counts = np.sort(counts)[::-1]
+        top_10 = sorted_counts[:10]
+        total = np.sum(counts)
+
+        # Normalize to frequencies
+        frequencies = top_10 / total
+
+        # Save to CSV (Generation, Haplotype_1_Freq, Haplotype_2_Freq, ...)
+        data = {"generation": generation}
+        for i, freq in enumerate(frequencies):
+            data[f"H_{i + 1}"] = freq
+
+        self._save_to_csv(data)
+
+    def finalize(self):
+        df = pd.read_csv(self.output_path)
+        generations = df["generation"]
+        # Extract only haplotype columns
+        haplo_cols = [c for c in df.columns if c.startswith("H_")]
+        data_matrix = df[haplo_cols].values
+
+        plt.figure(figsize=(12, 7))
+        bottom = np.zeros(len(df))
+
+        # Two high-contrast colors
+        colors = ['#1f77b4', '#aec7e8']
+
+        for i in range(data_matrix.shape[1]):
+            # Use modulo to toggle between the two colors
+            plt.bar(generations, data_matrix[:, i], bottom=bottom, width=df["generation"].diff().mean() or 1,
+                    color=colors[i % 2], edgecolor="white", linewidth=0.1)
+            bottom += data_matrix[:, i]
+
+        plt.title("Viral Haplotype Distribution (Zebra-Striped)")
+        plt.xlabel("Generation")
+        plt.ylabel("Relative Frequency")
+        plt.ylim(0, 1.05)
+        plt.savefig(self.output_path.with_suffix('.png'), dpi=300)
+        plt.close()
+
+    def _save_to_csv(self, data: dict):
+        """
+        Appends a single row of data to the CSV file.
+        """
+        file_exists = self.output_path.exists()
+
+        with open(self.output_path, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=data.keys())
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(data)

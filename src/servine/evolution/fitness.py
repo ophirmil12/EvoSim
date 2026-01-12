@@ -67,9 +67,6 @@ class PurifyingFitness(FitnessModel):
         # matrix != reference_sequence uses NumPy broadcasting
         mutation_counts = np.sum(matrix != self.reference_sequence, axis=1)
 
-        # 2. Calculate fitness: w = (1 - s)^n
-        # where s is intensity and n is number of mutations
-
         # fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
         fitness_scores = np.exp(-self.intensity*mutation_counts)
 
@@ -173,7 +170,7 @@ class FrequencyDependentFitness(FitnessModel):
         return np.maximum(fitness_scores, 1e-10)
 
 
-class ExposureFitness(PurifyingFitness):
+class ExposureFitness(FitnessModel):
     """
     This models a changing environment.
     Every X generations, the "optimal" sequence changes,
@@ -181,19 +178,34 @@ class ExposureFitness(PurifyingFitness):
     Note: Inherits from PurifyingFitness.
     """
     def __init__(self, intensity: float, update_interval: int, mutator, **kwargs):
-        # TODO make a way to send a specific mutator to this model, not the general mutator
-        #  (here we might want higher mutation rate than the entire population)
-        super().__init__(intensity, **kwargs)
+        super().__init__(**kwargs)
+        self.intensity = intensity
         self.update_interval = update_interval
         self.mutator = mutator          # Uses a mutator to "drift" the peak
 
     def update(self, generation: int):
-        if generation>0 and generation % self.update_interval == 0:
+        if generation > 0 and generation % self.update_interval == 0:
             # Shift the reference sequence slightly
             # Effectively "moving the goalposts" for the population
             tmp_pop = Population(self.reference_sequence.reshape(1, -1))
             self.mutator.apply(tmp_pop)
             self.reference_sequence = tmp_pop.get_matrix()[0]
+
+    def evaluate_population(self, population: Population) -> np.ndarray:
+        """
+        Calculates fitness for every individual in the population.
+        """
+        matrix = population.get_matrix()
+
+        # 1. Count mutations relative to reference for every row
+        # matrix != reference_sequence uses NumPy broadcasting
+        mutation_counts = np.sum(matrix != self.reference_sequence, axis=1)
+
+        # fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
+        fitness_scores = np.exp(-self.intensity*mutation_counts)
+
+        # Ensure fitness never hits exactly zero to avoid math errors in selection
+        return np.maximum(fitness_scores, 1e-10)
 
 
 class CategoricalFitness(FitnessModel):
