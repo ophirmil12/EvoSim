@@ -11,11 +11,11 @@ from abc import ABC, abstractmethod
 from src.servine.genome.sequence import Genome
 
 
-
 class Sampler(ABC):
     """
     The Base Template for all Samplers.
     """
+
     def __init__(self, interval: int, output_path: str, **kwargs):
         self.interval = interval
         self.output_path = Path(output_path)
@@ -33,7 +33,6 @@ class Sampler(ABC):
     def finalize(self):
         """Optional hook for end-of-simulation tasks (like plotting)."""
         pass
-
 
 
 class FastaSampler(Sampler):
@@ -78,7 +77,6 @@ class FastaSampler(Sampler):
     def finalize(self):
         """A hook for any finalization if needed."""
         pass
-
 
 
 class IdentitySampler(Sampler):
@@ -143,9 +141,9 @@ class IdentitySampler(Sampler):
         plt.close()  # Close to free up memory
 
 
-
 class FitnessSampler(Sampler):
     """Tracks Average Fitness (Genetic Health) over time."""
+
     def __init__(self, interval: int, output_path: str):
         super().__init__(interval, output_path)
         self.history = []
@@ -169,7 +167,6 @@ class FitnessSampler(Sampler):
         plt.grid(True, alpha=0.3)
         plt.savefig(self.output_path.with_suffix('.png'))
         plt.close()
-
 
 
 class DiversitySampler(Sampler):
@@ -223,7 +220,6 @@ class DiversitySampler(Sampler):
         plt.close()
 
 
-
 class PairwiseIdentitySampler(Sampler):
     """Calculates Average Pairwise Distance using the Jukes-Cantor (JC69) model."""
 
@@ -273,7 +269,6 @@ class PairwiseIdentitySampler(Sampler):
         plt.close()
 
 
-
 class HaplotypeFrequencySampler(Sampler):
     """Tracks the frequency of the most common genotypes (Haplotypes)."""
 
@@ -311,5 +306,61 @@ class HaplotypeFrequencySampler(Sampler):
         plt.ylabel("Cumulative Frequency")
         plt.legend(loc='upper right', bbox_to_anchor=(1.15, 1))
         plt.tight_layout()
+        plt.savefig(self.output_path.with_suffix('.png'))
+        plt.close()
+
+
+class InitialAlleleFrequencySampler(Sampler):
+    """
+    Tracks the frequency of only the initial unique genotypes over time.
+    """
+
+    def __init__(self, interval: int, output_path: str):
+        super().__init__(interval, output_path)
+        self.tracked_alleles = None
+        self.history = []
+
+    def sample(self, population, generation: int, **kwargs):
+        matrix = population.get_matrix()
+
+        # Capture the unique genotypes at the very first sampling point
+        if self.tracked_alleles is None:
+            self.tracked_alleles = np.unique(matrix, axis=0)
+        total_pop = len(matrix)
+
+        # For each initial allele, count how many individuals still carry it
+        for i, allele in enumerate(self.tracked_alleles):
+            # Find rows that exactly match the initial sequence
+            matches = np.all(matrix == allele, axis=1)
+            count = np.count_nonzero(matches)
+            self.history.append({
+                "generation": generation,
+                "allele_id": f"Initial_{i}",
+                "frequency": count / total_pop
+            })
+
+    def finalize(self):
+        if not self.history:
+            return
+
+        # Prepare data for plotting
+        df = pd.DataFrame(self.history)
+        pivot_df = df.pivot(index="generation", columns="allele_id", values="frequency").fillna(0)
+
+        plt.figure(figsize=(10, 6))
+        # Plot each initial allele as a separate line
+        for col in pivot_df.columns:
+            plt.plot(pivot_df.index, pivot_df[col], linewidth=2, alpha=0.8, label=col)
+
+        plt.title("Frequency of Initial Alleles Over Time")
+        plt.xlabel("Generation")
+        plt.ylabel("Frequency")
+        plt.ylim(0, 1.05)
+        plt.grid(True, linestyle='--', alpha=0.5)
+
+        plt.legend(title="Allele IDs", loc='upper left', bbox_to_anchor=(1.02, 1), fontsize='small')
+        plt.tight_layout()
+
+        # Save the plot
         plt.savefig(self.output_path.with_suffix('.png'))
         plt.close()

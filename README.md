@@ -1,7 +1,7 @@
 # The Evolution Simulator - "SERVINE"
 
 ## Overview
-The Evolution Simulator, codenamed **"SERVINE"**, is a sophisticated simulation program designed to model
+The Evolution Simulator, **"SERVINE"**, is a sophisticated simulation program designed to model
 the processes of evolution in a virtual environment.
 It allows users to create and observe digital genomes, track evolutionary changes over time, and analyze the effects of various environmental factors on species development.
 
@@ -58,6 +58,7 @@ All outputs are saved in the directory specified in the configuration file.
     - FitnessSampler(Sampler): Tracks Average Fitness (Genetic Health) over time.
     - DiversitySampler(Sampler): Tracks Population Diversity (Unique Genotypes) over time.
     - HaplotypeFrequencySampler(Sampler): Tracks the frequency of the most common genotypes (Haplotypes).
+    - InitialAlleleFrequencySampler(Sampler): Tracks the frequency of the initial genotypes.
   - trees.py
     - TreeRecorder(Sampler): A type of Sampler that Tracks the ancestry of every individual to reconstruct evolutionary history.
 
@@ -72,14 +73,3 @@ All outputs are saved in the directory specified in the configuration file.
 
 ### ./tests/
 - test_diversity_plot.py
-
-
-
-
-## Future Plans
-- More **mutations models** - JC69 for example
-- Option for simulation to **start from a single organism**
-- **Recombination** models, Insertion and Deletion mutations (need to change genome lengths first)
-- More detailed environmental factors affecting evolution
-- Visualization tools for better analysis of evolutionary trends (+ explanatory **trees**)
-- Changing the codebase to match **different lengths of genomes**

@@ -43,6 +43,9 @@ sampling:
   - type: "identity"
     interval: 10
     file: "output/identity.csv"
+  - type: "initial_alleles"
+    interval: 5
+    file: "output/initial_freqs.csv"
 
 
 #  - type: "tree"

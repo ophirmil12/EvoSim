@@ -13,8 +13,8 @@ class Population:
 
     def __init__(self, matrix: np.ndarray):
         self.matrix = matrix                            # the main object
-        self.size = matrix.shape[0]                     # size of population TODO make it not fixed? no idea how
-        self.genome_length = matrix.shape[1]            # genome fixed length TODO make it not fixed? no idea how
+        self.size = matrix.shape[0]                     # size of population
+        self.genome_length = matrix.shape[1]            # genome fixed length
         self.last_fitness = np.ones(self.size)          # the fitness values of each organism
 
     @classmethod
@@ -55,7 +55,7 @@ class Population:
         # Generate indices of the individuals who will 'parent' the next generation
         indices = np.random.choice(
             np.arange(self.size),
-            size=self.size,     # TODO: Make population size dynamic based on population control strategies?
+            size=self.size,
             replace=True,
             p=prob
         )

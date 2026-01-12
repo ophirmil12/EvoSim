@@ -46,6 +46,8 @@ class Simulator:
         self.current_individual_ids = list(range(len(self.population.get_matrix())))
         start_time = time.time()
 
+        self.collect_data()
+
         for epoch in self.epochs:
             print(fg.BLUE, f"Running Epoch: {epoch.name}...", fg.RESET)
             for g in range(epoch.generations):
