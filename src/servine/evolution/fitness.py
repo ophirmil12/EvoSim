@@ -2,9 +2,10 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-from scipy import stats
 
 from ..population.container import Population
+
+
 
 class FitnessModel(ABC):
     """
@@ -59,7 +60,6 @@ class PurifyingFitness(FitnessModel):
         """
         matrix = population.get_matrix()
 
-        # If no reference is set, use the first individual as the 'Wild Type'
         self.update_reference_to_consensus(population)
 
         # 1. Count mutations relative to reference for every row
@@ -67,7 +67,7 @@ class PurifyingFitness(FitnessModel):
         mutation_counts = np.sum(matrix != self.reference_sequence, axis=1)
 
         # fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
-        fitness_scores = np.exp(-self.intensity*mutation_counts)
+        fitness_scores = np.exp(- self.intensity * mutation_counts)
 
         # Ensure fitness never hits exactly zero to avoid math errors in selection
         return np.maximum(fitness_scores, 1e-10)
@@ -168,7 +168,7 @@ class FrequencyDependentFitness(FitnessModel):
         return np.maximum(fitness_scores, 1e-10)
 
 
-class ExposureFitness(FitnessModel):
+class ExposureFitness(PurifyingFitness):
     """
     This models a changing environment.
     Every X generations, the "optimal" sequence changes,
@@ -187,22 +187,6 @@ class ExposureFitness(FitnessModel):
             tmp_pop = Population(self.reference_sequence.reshape(1, -1))
             self.mutator.apply(tmp_pop)
             self.reference_sequence = tmp_pop.get_matrix()[0]
-
-    def evaluate_population(self, population: Population) -> np.ndarray:
-        """
-        Calculates fitness for every individual in the population.
-        """
-        matrix = population.get_matrix()
-
-        # 1. Count mutations relative to reference for every row
-        # matrix != reference_sequence uses NumPy broadcasting
-        mutation_counts = np.sum(matrix != self.reference_sequence, axis=1)
-
-        # fitness_scores = np.power(1.0 - self.intensity, mutation_counts)
-        fitness_scores = np.exp(-self.intensity*mutation_counts)
-
-        # Ensure fitness never hits exactly zero to avoid math errors in selection
-        return np.maximum(fitness_scores, 1e-10)
 
 
 class CategoricalFitness(FitnessModel):
@@ -233,5 +217,3 @@ class CategoricalFitness(FitnessModel):
         fitness = np.exp(-np.sum(diffs * self.site_weights, axis=1))
         fitness[lethal_mask] = 1e-10  # Effectively dead
         return fitness
-
-

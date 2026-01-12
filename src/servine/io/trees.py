@@ -23,8 +23,8 @@ class TreeRecorder(Sampler):
     - save the full tree in a figure
     """
 
-    def __init__(self, interval: int, output_path: str, initial_size: int):
-        super().__init__(interval, output_path)
+    def __init__(self, initial_size: int, **kwargs):
+        super().__init__(**kwargs)
         self.ancestry = []
         # The IDs of current individuals (relative to the last sample)
         self.current_lineage_ids = list(range(initial_size))

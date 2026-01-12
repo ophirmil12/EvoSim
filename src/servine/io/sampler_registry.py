@@ -28,25 +28,37 @@ class SamplerRegistry:
         samplers = []
         for s_conf in conf.get('sampling', []):
             sampler_class = cls._samplers.get(s_conf['type'])
-            if sampler_class:
-                # Special handling for tree which needs initial population size
-                if s_conf['type'] == 'tree':
-                    samplers.append(sampler_class(
-                        s_conf['interval'],
-                        s_conf['file'],
-                        initial_size=conf['population']['initial_size']
-                    ))
-                elif s_conf['type'] == 'fasta':
-                    samplers.append(sampler_class(
-                        s_conf['interval'],
-                        s_conf['file'],
-                        s_conf['interval'],  # backtrack_steps = interval, for fasta
-                        **params
-                    ))
-                else:
-                    samplers.append(sampler_class(s_conf['interval'],
-                                                  s_conf['file'],
-                                                  **params))
-            else:
-                print(fg.YELLOW, f"Warning: Unknown sampler type '{s_conf['type']}'", fg.RESET)
+
+            if not sampler_class:
+                continue
+
+            params = cls.sampler_params(s_conf, conf)
+
+            samplers.append(sampler_class(
+                interval=s_conf['interval'],
+                output_path=s_conf['file'],
+                **params
+            ))
         return samplers
+
+    @classmethod
+    def sampler_params(cls, s_conf, global_conf):
+        """
+        Similar to MutatorRegistry.mutator_params.
+        Handles special requirements for specific samplers.
+        """
+        # Get the 'params' block from YAML, or empty dict
+        params = s_conf.get('params', {}).copy()
+        s_type = s_conf['type'].lower()
+
+        # Model-Specific Requirements
+        if s_type == 'tree':
+            params['initial_size'] = global_conf['population']['initial_size']
+
+        elif s_type == 'fasta':
+            # Default backtrack to interval if not specified in YAML
+            if 'backtrack_steps' not in params:
+                params['backtrack_steps'] = s_conf['interval']
+
+        # Add other specific logic here as you grow the system
+        return params

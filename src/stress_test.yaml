@@ -1,0 +1,157 @@
+# Servine Evolution Stress Test Configuration
+# Goal: Test every single class and logic branch in the codebase.
+
+genome:
+  length: 20
+
+population:
+  initial_size: 100
+  # Testing Heterogeneous distribution logic
+  initial_distribution:
+    "AAAAAAAAAAAAAAAAAAAA": 40
+    "CCCCCCCCCCCCCCCCCCCC": 30
+    "GGGGGGGGGGGGGGGGGGGG": 20
+    "TTTTTTTTTTTTTTTTTTTT": 10
+
+# Sampling: Test every single sampler in the Registry
+sampling:
+  - type: "fasta"
+    interval: 50
+    file: "output/stress_test/sequences.fasta"
+  - type: "identity"
+    interval: 10
+    file: "output/stress_test/identity.csv"
+  - type: "fitness"
+    interval: 10
+    file: "output/stress_test/fitness.csv"
+  - type: "diversity"
+    interval: 10
+    file: "output/stress_test/diversity.csv"
+  - type: "pairwise"
+    interval: 25
+    file: "output/stress_test/divergence.csv"
+  - type: "haplotype"
+    interval: 10
+    file: "output/stress_test/haplotypes.csv"
+    params:
+      top_n: 15
+  - type: "initial_alleles"
+    interval: 10
+    file: "output/stress_test/initial_persistence.csv"
+  - type: "tree"
+    interval: 1
+    file: "output/stress_test/phylogeny.csv"
+
+# Epochs: Cycle through every Mutator and Fitness Model
+epochs:
+  # 1. Neutral + Unify
+  - name: "Neutral_Standard"
+    generations: 50
+    fitness:
+      type: "neutral"
+    mutator:
+      type: "unify"
+      params:
+        rate: 0.001
+
+  # 2. Purifying + Nucleotide (Testing Ts/Tv bias)
+  - name: "Purifying_Selection"
+    generations: 50
+    fitness:
+      type: "purifying"
+      params:
+        intensity: 0.2
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.002
+        transition_bias: 4.0
+
+  # 3. Epistatic + HotCold (Testing Matrices and K-mer detection)
+  - name: "Complex_Interactions"
+    generations: 50
+    fitness:
+      type: "epistatic"
+      params:
+        # 20x20 matrix (simplified: small boost for mutations at sites 0 and 1)
+        interaction_matrix: [
+          [0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ]
+    mutator:
+      type: "hotcold"
+      params:
+        rate: 0.001
+        variable_kmers: ["AAA", "GGG"]
+        k_high: 5.0
+        conserved_kmers: ["CCC", "TTT"]
+        k_low: 0.1
+        threshold: 1.0
+
+  # 4. Frequency Dependent + Unify
+  - name: "Immune_Pressure"
+    generations: 50
+    fitness:
+      type: "frequency"
+      params:
+        pressure: 0.8
+    mutator:
+      type: "unify"
+      params:
+        rate: 0.005
+
+  # 5. Exposure + Nucleotide (Testing moving peaks)
+  - name: "Environmental_Shift"
+    generations: 50
+    fitness:
+      type: "exposure"
+      params:
+        intensity: 0.5
+        update_interval: 10
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.001
+
+  # 6. Categorical + Unify (Testing lethal site masks)
+  - name: "Lethal_Constraints"
+    generations: 50
+    fitness:
+      type: "categorical"
+      params:
+        # Sites 0-4 are lethal (1.0), 5-19 are moderately constrained (0.1)
+        site_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    mutator:
+      type: "unify"
+      params:
+        rate: 0.001
+
+  # 7. Site Specific + Nucleotide (Testing pre-computed log math)
+  - name: "Fine_Grained_Selection"
+    generations: 50
+    fitness:
+      type: "site_specific"
+      params:
+        site_intensities: [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+    mutator:
+      type: "nucleotide"
+      params:
+        rate: 0.002

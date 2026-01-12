@@ -28,8 +28,8 @@ class UnifyMutator(Mutator):
     Assumes alphabet size k = 4 (e.g. A, C, G, T).
     """
 
-    def __init__(self, rate: float):
-        super().__init__(rate)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def apply(self, population):
         matrix = population.get_matrix()
@@ -56,8 +56,8 @@ class NucleotideMutator(Mutator):
     transitions/transversions (transversions are rarer).
     """
 
-    def __init__(self, rate: float, transition_bias: float = 2.0):
-        super().__init__(rate)
+    def __init__(self, transition_bias: float = 2.0, **kwargs):
+        super().__init__(**kwargs)
         self.transition_bias = transition_bias
 
         # 0:A, 1:C, 2:G, 3:T
@@ -103,10 +103,10 @@ class NucleotideMutator(Mutator):
 
 
 class HotColdMutator(Mutator):
-    def __init__(self, rate: float, variable_kmers: list, k_high: float,
+    def __init__(self, variable_kmers: list, k_high: float,
                  conserved_kmers: list, k_low: float, threshold: float = 0.8,
-                 transition_bias: float = 2.0):
-        super().__init__(rate)
+                 transition_bias: float = 2.0, **kwargs):
+        super().__init__(**kwargs)
         self.high_var_kmers = [np.array(km, dtype=np.uint8) for km in variable_kmers]
         self.k_high = k_high
         self.preserved_kmers = [np.array(km, dtype=np.uint8) for km in conserved_kmers]
