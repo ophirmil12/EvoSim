@@ -10,7 +10,7 @@ from src.servine.population.population_registry import PopulationRegistry
 from src.servine.evolution.mutator_registry import MutatorRegistry
 from src.servine.evolution.fitness_registry import FitnessRegistry
 from src.servine.io.sampler_registry import SamplerRegistry
-from src.servine.color import fg
+from src.servine.color import fg, bg
 
 
 def run_simulation_from_config(conf):
@@ -18,8 +18,10 @@ def run_simulation_from_config(conf):
     Runs the simulation based on a configuration dictionary.
     This function is reusable for both CLI and Streamlit UI.
     """
+    print(bg.MAGENTA, "Simulation has initiated form CLI.", bg.RESET)
 
     # 1. Initialize Core Components
+    print("Initializing Core Components...")
     initial_seq = None
     if 'initial_sequence' in conf['population']:
         seq_string = conf['population']['initial_sequence'].upper()
@@ -49,9 +51,11 @@ def run_simulation_from_config(conf):
             raise ValueError("Genome length must be specified if no initial sequence is provided.")
 
     # Create Population
+    print("Initiating population...")
     pop = PopulationRegistry.get(conf, initial_seq, genome)
 
     # 2. Setup Epochs
+    print("Setting up the epoches...")
     epochs = []
     for e_conf in conf['epochs']:
         # Initialize Mutator
@@ -75,9 +79,11 @@ def run_simulation_from_config(conf):
             fitness_model=fitness
         ))
 
+    print("Initiating samplers...")
     samplers = SamplerRegistry.get_samplers(conf=conf)
 
     # 4. Run
+    print("Building simulation (population + epochs + samplers = simulation!)...")
     sim = Simulator(population=pop, epochs=epochs, samplers=samplers)
 
     print(fg.GREEN, "--- Starting Simulation ---", fg.RESET)
@@ -104,8 +110,12 @@ def main():
 
     # Run the common logic
     try:
-        run_simulation_from_config(conf)
+        if run_simulation_from_config(conf):
+            print(bg.GREEN, "Success! Simulation ran successfully.", bg.RESET)
+        else:
+            print(fg.RED, "Error: Simulation ran failed.", fg.RESET)
     except ValueError as e:
+        print(fg.RED, f"Error: fatal error crash! {e}", fg.RESET)
         sys.exit(1)
 
 

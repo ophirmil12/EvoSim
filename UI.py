@@ -43,7 +43,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER IMAGE & TITLE LOGIC ---
-banner_path = "picture.png"
+banner_path = "logo.png"
 
 if os.path.exists(banner_path):
     col_logo, col_title = st.columns([1, 7])
