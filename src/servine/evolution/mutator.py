@@ -2,6 +2,7 @@
 
 import numpy as np
 from abc import ABC, abstractmethod
+from numpy.lib.stride_tricks import sliding_window_view
 
 
 class Mutator(ABC):
@@ -100,9 +101,6 @@ class NucleotideMutator(Mutator):
         matrix[mutation_mask] = new_nucs
 
 
-from numpy.lib.stride_tricks import sliding_window_view
-
-
 class HotColdMutator(Mutator):
     def __init__(self, rate: float, variable_kmers: list, k_high: float,
                  conserved_kmers: list, k_low: float, threshold: float = 0.8,
@@ -120,11 +118,8 @@ class HotColdMutator(Mutator):
         pop_size, genome_len = matrix.shape
         mask = np.ones((pop_size, genome_len), dtype=np.float32)
 
-        # print(f"first sequence {matrix[0]}")
-
         def find_kmers(kmers, factor):
             for kmer in kmers:
-                # print(f"Searching for kmer: {kmer}")
                 k_len = len(kmer)
                 min_matches = int(np.ceil(self.threshold * k_len))
 
@@ -146,7 +141,6 @@ class HotColdMutator(Mutator):
         find_kmers(self.high_var_kmers, self.k_high)
         find_kmers(self.preserved_kmers, self.k_low)
 
-        # print(f"mask after factor: {mask}")
         return mask
 
     def apply(self, population):
@@ -154,6 +148,9 @@ class HotColdMutator(Mutator):
 
         # Vectorized Rate Calculation
         rate_matrix = self._get_rate_mask(matrix) * self.rate
+
+        # Normalize matrix to ensure rates do not exceed 1.0
+        rate_matrix = np.clip(rate_matrix, 0.0, 1.0)
 
         # Standard Mutation Logic
         mutation_mask = np.random.random(matrix.shape) < rate_matrix

@@ -11,6 +11,7 @@ import logging
 
 from src.servine.io.trees import TreeRecorder
 from src.servine.color import fg
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class Simulator:
         """The main simulation loop"""
         # Start with the founding IDs (0, 1, 2... N-1)
         self.current_individual_ids = list(range(len(self.population.get_matrix())))
+        start_time = time.time()
 
         for epoch in self.epochs:
             print(fg.BLUE, f"Running Epoch: {epoch.name}...", fg.RESET)
@@ -67,8 +69,13 @@ class Simulator:
                 # 4. Mutate (Variation)
                 epoch.mutator.apply(self.population)
 
+                if (g + 1) % 50 == 0 or (g + 1) == epoch.generations:
+                    print(fg.CYAN, f"  Generation {g + 1}/{epoch.generations} complete.", fg.RESET)
+
             print(fg.MAGENTA, f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})", fg.RESET)
 
+        end_time = time.time()
+        print(fg.GREEN, f"Simulation complete in {end_time - start_time:.2f} seconds.", fg.RESET)
         print(fg.GREEN, "Finalizing samplers...", fg.GREEN)
         for sampler in self.samplers:
             sampler.finalize()
