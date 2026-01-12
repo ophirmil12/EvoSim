@@ -11,7 +11,6 @@ class MutatorRegistry:
         "unify": UnifyMutator,
         "nucleotide": NucleotideMutator,
         "hotcold": HotColdMutator,
-        # TODO add more
     }
 
     _mapping = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
@@ -50,7 +49,7 @@ class MutatorRegistry:
             if 'conserved_kmers' in e_conf['mutator']['params']:
                 numeric_low_kmers = cls._convert_kmers(
                     cls,
-                    e_conf['mutator']['params']['variable_kmers']
+                    e_conf['mutator']['params']['conserved_kmers']
                 )
                 mut_params['conserved_kmers'] = numeric_low_kmers
 

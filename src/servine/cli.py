@@ -75,11 +75,6 @@ def run_simulation_from_config(conf):
             fitness_model=fitness
         ))
 
-    # 3. Setup Samplers
-    # Ensure output directory exists before samplers try to write
-    if not os.path.exists("output"):
-        os.makedirs("output")
-
     samplers = SamplerRegistry.get_samplers(conf=conf)
 
     # 4. Run

@@ -40,8 +40,8 @@ class FastaSampler(Sampler):
     Exports population sequences to a FASTA file.
     """
 
-    def __init__(self, interval: int, output_path: str, backtrack_steps: int = 50):
-        super().__init__(interval, output_path)
+    def __init__(self, backtrack_steps: int = 50, **kwargs):
+        super().__init__(**kwargs)
         # DNA mapping
         self.alphabet = Genome.ALPHABET
         self.backtrack_steps = backtrack_steps
@@ -84,8 +84,8 @@ class IdentitySampler(Sampler):
     Plots/Records the average sequence identity relative to the initial sequence.
     """
 
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.reference_sequence = None
         self.history = []
 
@@ -144,8 +144,8 @@ class IdentitySampler(Sampler):
 class FitnessSampler(Sampler):
     """Tracks Average Fitness (Genetic Health) over time."""
 
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.history = []
 
     def sample(self, population, generation: int, **kwargs):
@@ -172,8 +172,8 @@ class FitnessSampler(Sampler):
 class DiversitySampler(Sampler):
     """Tracks Population Diversity (Unique Genotypes) over time."""
 
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.history = []
 
     def sample(self, population, generation: int, **kwargs):
@@ -223,8 +223,8 @@ class DiversitySampler(Sampler):
 class PairwiseIdentitySampler(Sampler):
     """Calculates Average Pairwise Distance using the Jukes-Cantor (JC69) model."""
 
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.history = []
 
     def sample(self, population, generation: int, **kwargs):
@@ -272,8 +272,8 @@ class PairwiseIdentitySampler(Sampler):
 class HaplotypeFrequencySampler(Sampler):
     """Tracks the frequency of the most common genotypes (Haplotypes)."""
 
-    def __init__(self, interval: int, output_path: str, top_n: int = 10):
-        super().__init__(interval, output_path)
+    def __init__(self, top_n: int = 10, **kwargs):
+        super().__init__(**kwargs)
         self.history = []
         self.top_n = top_n
 
@@ -315,8 +315,8 @@ class InitialAlleleFrequencySampler(Sampler):
     Tracks the frequency of only the initial unique genotypes over time.
     """
 
-    def __init__(self, interval: int, output_path: str):
-        super().__init__(interval, output_path)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.tracked_alleles = None
         self.history = []
 

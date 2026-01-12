@@ -6,7 +6,6 @@ from scipy import stats
 
 from ..population.container import Population
 
-# TODO: for all the models - compare to the SANTA-SIM git to check that the math is correct(!!!)
 class FitnessModel(ABC):
     """
     The Base Template for all Fitness Landscapes.
@@ -47,11 +46,11 @@ class NeutralFitness(FitnessModel):
 # TODO: the purifying models need some testing and refinement
 class PurifyingFitness(FitnessModel):
     """Fitness model where mutations reduce fitness exponentially."""
-    def __init__(self, intensity: float = 0.1, reference_sequence=None):
+    def __init__(self, intensity: float = 0.1, **kwargs):
         """
         :param intensity: How much each mutation hurts fitness (Selection Coefficient).
         """
-        super().__init__(reference_sequence)
+        super().__init__(**kwargs)
         self.intensity = intensity
 
     def evaluate_population(self, population: Population) -> np.ndarray:
@@ -87,8 +86,6 @@ class PurifyingFitness(FitnessModel):
         # self.reference_sequence = consensus.flatten()
 
 
-# TODO maybe create a sub-SiteSpecificPurifyingFitness that consider the 3-codon redundancy
-#  (ignore the mutations in third letters in fitness calculations)
 class SiteSpecificPurifyingFitness(FitnessModel):
     """
     By defining an array of "site_intensities", we can control on how a mutation
@@ -96,10 +93,11 @@ class SiteSpecificPurifyingFitness(FitnessModel):
     Higher "site_intensity" -> lower fitness when mutation caused.
     Note that a reference sequence is required (the most fit variant).
     """
-    def __init__(self, site_intensities: np.ndarray, reference_sequence: np.ndarray):
-        super().__init__(reference_sequence)
+    def __init__(self, site_intensities: np.ndarray, **kwargs):
+        super().__init__(**kwargs)
         # site_intensities is an array of length L (e.g., [0.5, 0.01, 0.01, 0.9...])
         self.site_intensities = site_intensities
+        self._log_survival = np.log(np.maximum(1.0 - self.site_intensities, 1e-10))
 
     def evaluate_population(self, population: Population) -> np.ndarray:
         matrix = population.get_matrix()
@@ -109,7 +107,7 @@ class SiteSpecificPurifyingFitness(FitnessModel):
 
         # 2. Multiply each mutation by its specific cost
         # We use log-space to handle the product (1-s1)*(1-s2)... efficiently
-        weighted_mutation_costs = mutations * np.log(1.0 - self.site_intensities)
+        weighted_mutation_costs = mutations * self._log_survival
 
         # 3. Sum logs and exponentiate to get final fitness
         fitness_scores = np.exp(np.sum(weighted_mutation_costs, axis=1))
@@ -122,12 +120,12 @@ class EpistaticFitness(FitnessModel):
     Fitness model with pairwise epistatic interactions.
     Note: an L*L matrix is required as input.
     """
-    def __init__(self, interaction_matrix: np.ndarray, reference_sequence=None):
+    def __init__(self, interaction_matrix: np.ndarray, **kwargs):
         """
         :param interaction_matrix: A 2D matrix where matrix[i, j] is the
                                    fitness boost/penalty if both sites i and j are mutated.
         """
-        super().__init__(reference_sequence)
+        super().__init__(**kwargs)
         self.interaction_matrix = interaction_matrix
 
     def evaluate_population(self, population: Population) -> np.ndarray:
@@ -180,14 +178,12 @@ class ExposureFitness(PurifyingFitness):
         and the population must catch up or die.
     Note: Inherits from PurifyingFitness.
     """
-    def __init__(self, intensity: float, update_interval: int, mutator, **kwargs):
-        # TODO make a way to send a specific mutator to this model, not the general mutator
-        #  (here we might want higher mutation rate than the entire population)
-        super().__init__(intensity, **kwargs)
+    def __init__(self, update_interval: int, mutator, **kwargs):
+        super().__init__(**kwargs)
         self.update_interval = update_interval
         self.mutator = mutator          # Uses a mutator to "drift" the peak
 
-    def update_peak(self, generation: int):
+    def update(self, generation: int):
         if generation % self.update_interval == 0:
             # Shift the reference sequence slightly
             # Effectively "moving the goalposts" for the population
@@ -201,12 +197,13 @@ class CategoricalFitness(FitnessModel):
     Not all genes are equal.
     Some sites are "locked" (Lethal if mutated), while others are "flexible" (Neutral).
     """
-    def __init__(self, site_weights: np.ndarray, reference_sequence=None, **kwargs):
+    def __init__(self, site_weights: np.ndarray, **kwargs):
         """
         :param site_weights: Array of length L, where 0.0 = Neutral and 1.0 = Lethal.
         """
-        super().__init__(reference_sequence, **kwargs)
+        super().__init__(**kwargs)
         self.site_weights = site_weights
+        self.lethal_indices = np.where(self.site_weights >= 1.0)[0]
 
     def evaluate_population(self, population: Population) -> np.ndarray:
         matrix = population.get_matrix()
@@ -215,7 +212,10 @@ class CategoricalFitness(FitnessModel):
         # If any difference occurs at a site where weight is 1.0,
         # that individual should likely have 0 fitness.
         # This is a bitwise 'any' check across lethal columns.
-        lethal_mask = np.any(diffs[:, self.site_weights == 1.0], axis=1)
+        if len(self.lethal_indices) > 0:
+            lethal_mask = np.any(diffs[:, self.lethal_indices], axis=1)
+        else:
+            lethal_mask = np.zeros(matrix.shape[0], dtype=bool)
 
         fitness = np.exp(-np.sum(diffs * self.site_weights, axis=1))
         fitness[lethal_mask] = 1e-10  # Effectively dead
