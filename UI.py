@@ -660,3 +660,4 @@ with tab_data:
                 # Show CSV as interactive table
                 df = pd.read_csv(csv_path)
                 st.dataframe(df, use_container_width=True)
+
