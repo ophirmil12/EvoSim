@@ -23,7 +23,7 @@ epochs:
     fitness:
       type: "purifying"
       params:
-        intensity: 0.1
+        intensity: 0.05
 
   - name: "Phase 2: Vaccine Rollout (Shifting Peak)"
     generations: 100
@@ -37,8 +37,6 @@ epochs:
       params:
         intensity: 0.15
         update_interval: 20
-        mutator_type: "nucleotide"
-        mutator_params: {rate: 0.01, transition_bias: 2.5}
 
   - name: "Phase 3: Chronic Immune Escape"
     generations: 100
@@ -53,17 +51,37 @@ epochs:
         pressure: 1.5
 
 sampling:
+  - type: "fasta"
+    interval: 50
+    file: "output/sequences.fasta"
+    backtrack_steps: 50
+
+  - type: "identity"
+    interval: 10
+    file: "output/identity_history.csv"
+
+  - type: "diversity"
+    interval: 10
+    file: "output/diversity_metrics.csv"
+
   - type: "initial_alleles"
     interval: 5
     file: "output/corona_initial.csv"
+
   - type: "haplotype"
     interval: 10
     file: "output/corona_sweeps.csv"
+
   - type: "fitness"
     interval: 5
     file: "output/corona_health.csv"
-#  - type: "tree"
-#    interval: 25
-#    file: "output/corona_tree.csv"
+
+  - type: "pairwise"
+    interval: 20
+    file: "output/pairwise_divergence.csv"
+
+  - type: "tree"
+    interval: 25
+    file: "output/corona_tree.csv"
 
 
