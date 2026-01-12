@@ -71,7 +71,7 @@ class Simulator:
 
             print(fg.MAGENTA, f"Finished Epoch: {epoch.name} (index: {self.epochs.index(epoch)})", fg.RESET)
 
-        print(fg.GREEN, "Finalizing samplers...", fg.GREEN)
+        print(fg.GREEN, "Finalizing samplers...", fg.RESET)
         for sampler in self.samplers:
             sampler.finalize()
 
