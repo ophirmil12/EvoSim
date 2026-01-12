@@ -2,7 +2,7 @@
 
 from src.servine.io.sampler import (FastaSampler, IdentitySampler, FitnessSampler,
                                     DiversitySampler, PairwiseIdentitySampler, HaplotypeFrequencySampler,
-                                    InitialAlleleFrequencySampler)
+                                    InitialAlleleFrequencySampler, MutationDensitySampler, ZebraHaplotypeSampler)
 from src.servine.io.trees import TreeRecorder
 from src.servine.color import fg
 
@@ -17,7 +17,9 @@ class SamplerRegistry:
         'tree': TreeRecorder,  # Note: computationally intensive - creates a large tree sometimes
         'pairwise': PairwiseIdentitySampler,
         'haplotype': HaplotypeFrequencySampler,
-        'initial_alleles': InitialAlleleFrequencySampler
+        'initial_alleles': InitialAlleleFrequencySampler,
+        'mutation_density': MutationDensitySampler,
+        'zebra_haplotype': ZebraHaplotypeSampler
     }
 
     @classmethod
